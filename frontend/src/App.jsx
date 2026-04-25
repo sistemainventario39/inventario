@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Busqueda from './pages/Busqueda';
 import Registro from './pages/Registro';
 import Perfil from './pages/Perfil';
+import RegistroUsuarios from "./pages/RegistroUsuarios";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/busqueda" element={<Busqueda />} />
         <Route path="/registro" element={<Registro />} />
+        <Route path="/registro-usuarios" element={<RegistroUsuarios />} />
         <Route path="/perfil" element={<Perfil />} />
       </Routes>
     </Router>

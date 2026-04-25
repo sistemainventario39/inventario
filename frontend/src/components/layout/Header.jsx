@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import { FiCpu, FiUser } from "react-icons/fi";
-import { UserIcon, LogOutIcon } from "lucide-react";
+import { Menu, X, UserIcon, LogOutIcon } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -22,6 +22,16 @@ const listItems = [
 
 export default function Header() {
   const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth >= 768) setMobileOpen(false);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   const handleAction = (item) => {
     if (item.property === "Sign Out") {
       navigate("/login");
@@ -62,10 +72,24 @@ export default function Header() {
               <NavLink to="/registro" className={getNavClass}>
                 Registro de Equipo
               </NavLink>
+              <NavLink to="/registro-usuarios" className={getNavClass}>
+                Registro de Usuarios
+              </NavLink>
             </nav>
           </div>
 
           <div className="flex items-center">
+            {/* Menú móvil */}
+            <button
+              type="button"
+              className="md:hidden inline-flex items-center justify-center rounded-lg p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
+              aria-expanded={mobileOpen}
+              onClick={() => setMobileOpen((v) => !v)}
+            >
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+
             {/* Perfil */}
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
@@ -102,6 +126,39 @@ export default function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+        </div>
+
+        {/* Panel móvil */}
+        <div
+          className={
+            "md:hidden overflow-hidden transition-[max-height] duration-300 " +
+            (mobileOpen ? "max-h-72" : "max-h-0")
+          }
+        >
+          <nav className="pb-4 pt-2 flex flex-col gap-1">
+            {[
+              { to: "/dashboard", label: "Inicio" },
+              { to: "/busqueda", label: "Búsqueda" },
+              { to: "/registro", label: "Registro de Equipo" },
+              { to: "/registro-usuarios", label: "Registro de Usuarios" },
+            ].map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                onClick={() => setMobileOpen(false)}
+                className={({ isActive }) =>
+                  [
+                    "px-3 py-2 rounded-lg text-sm font-semibold transition-colors",
+                    isActive
+                      ? "bg-primary-50 text-primary-700"
+                      : "text-gray-700 hover:bg-gray-100",
+                  ].join(" ")
+                }
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
         </div>
       </div>
     </header>

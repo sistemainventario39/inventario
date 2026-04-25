@@ -38,7 +38,7 @@ export default function Login() {
                   className="block text-sm font-medium text-gray-700 mb-2"
                   htmlFor="email"
                 >
-                  Correo Electrónico
+                  Usuario
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
