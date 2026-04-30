@@ -11,15 +11,12 @@ const initialForm = {
   usuario: "",
   password: "",
   rol: "",
-<<<<<<< HEAD
   region: "",
   estado: "",
   city: "",
   branch: "",
   piso: "",
   ala: "",
-=======
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
 };
 
 const seedUsers = [
@@ -32,15 +29,12 @@ const seedUsers = [
     telefono: "0414-1234567",
     usuario: "jperez",
     rol: "Admin",
-<<<<<<< HEAD
-    region: "Lara",
+    region: "Centro",
     estado: "Lara",
     city: "Barquisimeto",
     branch: "Torre 30",
     piso: "Piso 1",
     ala: "Ala 1",
-=======
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
   },
   {
     id: 2,
@@ -51,15 +45,12 @@ const seedUsers = [
     telefono: "0424-7654321",
     usuario: "mgomez",
     rol: "Superadmin",
-<<<<<<< HEAD
     region: "Lara",
     estado: "Lara",
     city: "Barquisimeto",
     branch: "Torre 30",
     piso: "Piso 1",
     ala: "Ala 1",
-=======
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
   },
 ];
 
@@ -75,15 +66,12 @@ function validate(values) {
     "usuario",
     "password",
     "rol",
-<<<<<<< HEAD
     "region",
     "estado",
     "city",
     "branch",
     "piso",
     "ala",
-=======
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
   ];
 
   for (const key of required) {
@@ -103,11 +91,7 @@ function validate(values) {
 
 function inputClass({ hasError, isSuccess }) {
   const base =
-<<<<<<< HEAD
     "block w-60 rounded-lg shadow-sm py-2 px-3 text-sm border transition-all outline-none bg-white";
-=======
-    "block w-full rounded-lg shadow-sm py-2 px-3 text-sm border transition-all outline-none bg-white";
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
   const focus = "focus:ring-2 focus:ring-primary-500 focus:border-primary-500";
   const error = "border-red-300 focus:ring-red-500 focus:border-red-500";
   const success = "border-green-300 focus:ring-green-500 focus:border-green-500";
@@ -120,6 +104,85 @@ export default function RegistroUsuarios() {
   const [touched, setTouched] = useState({});
   const [focused, setFocused] = useState(null);
   const [users, setUsers] = useState(seedUsers);
+
+  const [region] = useState([
+    { id: 1, nombre: 'Occidente' },
+    { id: 2, nombre: 'Centro'},
+    { id: 3, nombre: 'Llanos'},
+  ]);
+
+  const [estados, setEstados] = useState([]);
+  const [ciudades, setCiudades] = useState([]);
+  const [torres, setTorres] = useState([]);
+  const [piso, setPiso] = useState([]);
+  const [ala, setAla  ] = useState([]);
+
+  const manejarCambioRegion = (e) => {
+    const regionNombre = e.target.value;
+    setForm(prev => ({ ...prev, region: regionNombre, estado: '', city: '', branch: '' }));
+    if (regionNombre === 'Occidente') {
+      setEstados([{ id: 1, nombre: 'Lara' }]);
+    } else if (regionNombre === 'Centro') {
+      setEstados([{ id: 2, nombre: 'Yaracuy' }]);
+    } else if (regionNombre === 'Llanos') {
+      setEstados([{ id: 3, nombre: 'Portuguesa' }]);
+    } else {
+      setEstados([]);
+    }
+  };
+
+  const manejarCambioEstado = (e) => {
+    const estadoNombre = e.target.value;
+    setForm(prev => ({ ...prev, estado: estadoNombre, city: '' }));
+    if (estadoNombre === 'Lara') {
+      setCiudades([{ id: 1, nombre: 'Barquisimeto' }]);
+    } else if (estadoNombre === 'Yaracuy') {
+      setCiudades([{ id: 2, nombre: 'San Felipe' }]);
+    } else if (estadoNombre === 'Portuguesa') {
+      setCiudades([{ id: 3, nombre: 'Acarigua' }]);
+    } else {
+      setCiudades([]);
+    }
+  };
+
+  const manejarCambioCiudad = (e) => {
+    const ciudadNombre = e.target.value;
+    setForm(prev => ({ ...prev, city: ciudadNombre, branch: '' }));
+    if (ciudadNombre === 'Barquisimeto') {
+      setTorres([
+        { id: 1, nombre: 'Barquisimeto Centro' },
+        { id: 2, nombre: 'Torre Lara' }
+      ]);
+    } else if (ciudadNombre === 'San Felipe') {
+      setTorres([{ id: 3, nombre: 'SF' }]);
+    } else {
+      setTorres([]);
+    }
+  };
+
+    const manejarCambioTorre = (e) => {
+    const torreNombre = e.target.value;
+    setForm(prev => ({ ...prev, branch: torreNombre }));
+    if (torreNombre === 'Barquisimeto Centro') {
+      setPiso([
+        { id: 1, nombre: 'Piso 1' }
+      ]);
+    } else if (torreNombre === 'Torre Lara') {
+      setPiso([{ id: 2, nombre: 'Piso 1' }, { id: 3, nombre: 'Piso 6' }]);
+    } else {
+      setPiso([]);
+    }
+  };
+
+    const manejarCambioPiso = (e) => {
+    const pisoNombre = e.target.value;
+    setForm(prev => ({ ...prev, piso: pisoNombre }));
+    if (pisoNombre === 'Piso 1') {
+      setAla([{ id: 1, nombre: 'Ala Norte', }, { id: 2, nombre: 'Ala Sur' }]);
+    } else {
+      setAla([]);
+    }
+  };
 
   const errors = useMemo(() => validate(form), [form]);
 
@@ -158,15 +221,12 @@ export default function RegistroUsuarios() {
         telefono: form.telefono.trim(),
         usuario: form.usuario.trim(),
         rol: form.rol,
-<<<<<<< HEAD
         region: form.region,
         estado: form.estado,
         city: form.city,
         branch: form.branch,
         piso: form.piso,
         ala: form.ala,
-=======
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
       },
       ...prev,
     ]);
@@ -180,8 +240,12 @@ export default function RegistroUsuarios() {
     setForm(initialForm);
     setTouched({});
     setFocused(null);
+    setEstados([]);
+    setCiudades([]);
+    setTorres([]);
+    setPiso([]);
+    setAla([]);
   };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -210,11 +274,7 @@ export default function RegistroUsuarios() {
               </div>
 
               <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
-<<<<<<< HEAD
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-=======
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
                   <div className="sm:col-span-1">
                     <label className="block text-sm font-bold text-black mb-2">
                       Cédula <span className="text-red-500">*</span>
@@ -240,30 +300,6 @@ export default function RegistroUsuarios() {
                     )}
                   </div>
 
-<<<<<<< HEAD
-
-=======
-                  <div className="sm:col-span-1">
-                    <label className="block text-sm font-bold text-black mb-2">
-                      Rol <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={form.rol}
-                      onChange={(e) => setField("rol", e.target.value)}
-                      onBlur={() => markTouched("rol")}
-                      onFocus={() => setFocused("rol")}
-                      className={inputClass(getState("rol")) + " cursor-pointer"}
-                      aria-invalid={getState("rol").hasError || undefined}
-                    >
-                      <option value="">-- Selecciona --</option>
-                      <option value="Superadmin">Superadmin</option>
-                      <option value="Admin">Admin</option>
-                    </select>
-                    {getState("rol").hasError && (
-                      <p className="text-xs text-red-600 mt-1">{errors.rol}</p>
-                    )}
-                  </div>
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
 
                   <div className="sm:col-span-1">
                     <label className="block text-sm font-bold text-black mb-2">
@@ -307,28 +343,6 @@ export default function RegistroUsuarios() {
 
                   <div className="sm:col-span-1">
                     <label className="block text-sm font-bold text-black mb-2">
-<<<<<<< HEAD
-=======
-                      Correo Electrónico <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      placeholder="nombre.apellido@cantv.com"
-                      value={form.email}
-                      onChange={(e) => setField("email", e.target.value)}
-                      onBlur={() => markTouched("email")}
-                      onFocus={() => setFocused("email")}
-                      className={inputClass(getState("email"))}
-                      aria-invalid={getState("email").hasError || undefined}
-                    />
-                    {getState("email").hasError && (
-                      <p className="text-xs text-red-600 mt-1">{errors.email}</p>
-                    )}
-                  </div>
-
-                  <div className="sm:col-span-1">
-                    <label className="block text-sm font-bold text-black mb-2">
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
                       Teléfono <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -354,11 +368,7 @@ export default function RegistroUsuarios() {
                     </label>
                     <input
                       type="text"
-<<<<<<< HEAD
                       placeholder="Usuario"
-=======
-                      placeholder="usuario"
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
                       value={form.usuario}
                       onChange={(e) => setField("usuario", e.target.value)}
                       onBlur={() => markTouched("usuario")}
@@ -375,7 +385,6 @@ export default function RegistroUsuarios() {
 
                   <div className="sm:col-span-1">
                     <label className="block text-sm font-bold text-black mb-2">
-<<<<<<< HEAD
                       Rol <span className="text-red-500">*</span>
                     </label>
                     <select
@@ -417,8 +426,6 @@ export default function RegistroUsuarios() {
 
                   <div className="sm:col-span-1">
                     <label className="block text-sm font-bold text-black mb-2">
-=======
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
                       Contraseña <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -441,7 +448,6 @@ export default function RegistroUsuarios() {
                       </p>
                     )}
                   </div>
-<<<<<<< HEAD
 
                   <div>
                     <label className="block text-sm font-bold text-black mb-2">
@@ -451,16 +457,14 @@ export default function RegistroUsuarios() {
                       required
                       className="w-60 border-gray-300 rounded-lg py-2 px-3 border outline-none bg-white focus:ring-2 focus:ring-primary-500"
                       value={form.region}
-                      onChange={(e) =>
-                        setForm({ ...form, region: e.target.value })
-                      }
+                      onChange={manejarCambioRegion}
                     >
-                      <option value="" disabled>
+                      <option value="">
                         Seleccione Region
                       </option>
-                      <option value="Lara">Lara</option>
-                      <option value="Yaracuy">Yaracuy</option>
-                      <option value="Portuguesa">Portuguesa</option>
+                      {region.map(reg => (
+                        <option key={reg.id} value={reg.nombre}>{reg.nombre}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -469,21 +473,18 @@ export default function RegistroUsuarios() {
                       Estado <span className="text-red-500">*</span>
                     </label>
                     <select
-                      type="text"
+                      disabled={estados.length === 0}
                       required
-                      placeholder="Ej: Lara"
                       className="w-60 bg-white border-gray-300 rounded-lg py-2 px-3 border outline-none focus:ring-2 focus:ring-primary-500"
                       value={form.estado}
-                      onChange={(e) =>
-                        setForm({ ...form, estado: e.target.value })
-                      }
+                      onChange={manejarCambioEstado}
                     >
-                      <option value="" disabled>
+                      <option value="">
                         Seleccione Estado
                       </option>
-                      <option value="Lara">Lara</option>
-                      <option value="Yaracuy">Yaracuy</option>
-                      <option value="Portuguesa">Portuguesa</option>
+                      {estados.map(est => (
+                        <option key={est.id} value={est.nombre}>{est.nombre}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -492,41 +493,38 @@ export default function RegistroUsuarios() {
                       Ciudad <span className="text-red-500">*</span>
                     </label>
                     <select
-                      type="text"
+                      disabled={ciudades.length === 0}
                       required
                       className="w-60 border-gray-300 rounded-lg py-2 px-3 border outline-none bg-white focus:ring-2 focus:ring-primary-500"
                       value={form.city}
-                      onChange={(e) =>
-                        setForm({ ...form, city: e.target.value })
-                      }
+                      onChange={manejarCambioCiudad}
                     >
-                      <option value="" disabled>
+                      <option value="">
                         Seleccione Ciudad
                       </option>
-                      <option value="Barquisimeto">Barquisimeto</option>
-                      <option value="Caracas">Caracas</option>
-                      <option value="San Felipe">San Felipe</option>
+                      {ciudades.map(ciu => (
+                        <option key={ciu.id} value={ciu.nombre}>{ciu.nombre}</option>
+                      ))}
                     </select>
                   </div>
+
                   <div>
                     <label className="block text-sm font-bold text-black mb-2">
-                      Sede / Torre <span className="text-red-500">*</span>
+                      Torre o Centro <span className="text-red-500">*</span>
                     </label>
                     <select
-                      type="text"
+                      disabled={torres.length === 0}
                       required
-                      placeholder="Ej: Torre Central"
-                      className="w-60 bg-white border-gray-300 rounded-lg py-2 px-3 border outline-none focus:ring-2 focus:ring-primary-500"
+                      className="w-60 border-gray-300 rounded-lg py-2 px-3 border outline-none bg-white focus:ring-2 focus:ring-primary-500"
                       value={form.branch}
-                      onChange={(e) =>
-                        setForm({ ...form, branch: e.target.value })
-                      }
+                      onChange={manejarCambioTorre}
                     >
-                      <option value="" disabled>
-                        Seleccione Torre
+                      <option value="">
+                        Seleccione Torre o Centro
                       </option>
-                      <option value="Torre 30">Torre 30</option>
-                      <option value="Torre Este">Torre Este</option>
+                      {torres.map(Tow => (
+                        <option key={Tow.id} value={Tow.nombre}>{Tow.nombre}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -536,26 +534,19 @@ export default function RegistroUsuarios() {
                     </label>
                     <select
                       type="text"
+                      disabled={piso.length === 0}
                       required
                       placeholder="Ej: Piso 1"
                       className="w-60 bg-white border-gray-300 rounded-lg py-2 px-3 border outline-none focus:ring-2 focus:ring-primary-500"
                       value={form.piso}
-                      onChange={(e) =>
-                        setForm({ ...form, piso: e.target.value })
-                      }
+                      onChange={manejarCambioPiso}
                     >
-                      <option value="" disabled>
+                        <option value="">
                         Seleccione Piso
                       </option>
-                      <option value="Santa Rosa">Santa Rosa</option>
-                      <option value="Planta Baja">Planta Baja</option>
-                      <option value="MEZZ">MEZZ</option>
-                      <option value="Piso 1">Piso 1</option>
-                      <option value="Piso 2">Piso 2</option>
-                      <option value="Piso 3">Piso 3</option>
-                      <option value="Piso 4">Piso 4</option>
-                      <option value="Piso 5">Piso 5</option>
-                      <option value="Piso 3">Piso 6</option>
+                      {piso.map(piso => (
+                        <option key={piso.id} value={piso.nombre}>{piso.nombre}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -565,6 +556,7 @@ export default function RegistroUsuarios() {
                     </label>
                     <select
                       type="text"
+                      disabled={ala.length === 0}
                       required
                       placeholder="Ej: Seleccione Ala Norte"
                       className="w-60 bg-white border-gray-300 rounded-lg py-2 px-3 border outline-none focus:ring-2 focus:ring-primary-500"
@@ -576,15 +568,12 @@ export default function RegistroUsuarios() {
                       <option value="" disabled>
                         Seleccione Ala
                       </option>
-                      <option value="Ala Norte">Ala Norte</option>
-                      <option value="Ala Este">Ala Este</option>
-                      <option value="Ala Sur">Ala Sur</option>
-                      <option value="Ala Oeste">Ala Oeste</option>
+                      {ala.map(ala => (
+                        <option key={ala.id} value={ala.nombre}>{ala.nombre}</option>
+                      ))}
                     </select>
                   </div>
 
-=======
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
                 </div>
 
                 <div className="pt-4 border-t border-gray-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
@@ -625,7 +614,6 @@ export default function RegistroUsuarios() {
                         "Cédula",
                         "Nombre",
                         "Apellido",
-<<<<<<< HEAD
                         "Teléfono",
                         "Usuario",
                         "Rol",
@@ -636,12 +624,6 @@ export default function RegistroUsuarios() {
                         "Sede",
                         "Piso",
                         "Ala"
-=======
-                        "Correo",
-                        "Teléfono",
-                        "Usuario",
-                        "Rol",
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
                       ].map((h) => (
                         <th
                           key={h}
@@ -670,12 +652,6 @@ export default function RegistroUsuarios() {
                           {u.apellido}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-<<<<<<< HEAD
-=======
-                          {u.email}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
                           {u.telefono}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
@@ -693,7 +669,6 @@ export default function RegistroUsuarios() {
                             {u.rol}
                           </span>
                         </td>
-<<<<<<< HEAD
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                           {u.email}
                         </td>
@@ -715,8 +690,6 @@ export default function RegistroUsuarios() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                           {u.ala}
                         </td>
-=======
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
                       </tr>
                     ))}
 

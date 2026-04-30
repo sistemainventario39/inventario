@@ -3,31 +3,22 @@ import Header from "../components/layout/Header";
 import { FiSave, FiX } from "react-icons/fi";
 import { CiSearch } from "react-icons/ci";
 import { useNavigate } from "react-router-dom";
-<<<<<<< HEAD
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from "date-fns/locale";
 
-=======
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
 
 export default function Registro() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     // Datos Generales
     name: "",
-<<<<<<< HEAD
     model: "",
-=======
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
     serial: "",
     type: "",
     status: "Bueno",
     description: "",
-<<<<<<< HEAD
     acquisitionDate: new Date(),
-=======
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
 
     // Componentes Internos
     ram: "",
@@ -59,7 +50,6 @@ export default function Registro() {
     speakersSerial: "",
     speakersStatus: "Bueno",
 
-<<<<<<< HEAD
  // Procedencia 
     regionP: "",
     estadoP: "",
@@ -75,11 +65,6 @@ export default function Registro() {
     branch: "",
     piso: "",
     ala: "",
-=======
-    // Ubicación
-    city: "",
-    branch: "",
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
   });
 
   const handleSubmit = (e) => {
@@ -146,10 +131,7 @@ export default function Registro() {
                 <option value="Teclado">Teclado</option>
                 <option value="Mouse">Mouse</option>
                 <option value="Switch">Switch</option>
-<<<<<<< HEAD
                 <option value="Impresora">Impresora</option>
-=======
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
               </select>
             </div>
 
@@ -157,28 +139,17 @@ export default function Registro() {
             {formData.type && (
               <div className="animate-in fade-in slide-in-from-top-4 duration-500 space-y-8">
                 {/* DATOS DEL EQUIPO PRINCIPAL */}
-<<<<<<< HEAD
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-sm">
-=======
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-sm">
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
                   <div className="col-span-full mb-2 border-b border-gray-200 pb-2">
                     <h3 className="text-xs font-bold text-gray-600 uppercase tracking-widest">
                       Datos del Equipo Principal ({formData.type})
                     </h3>
                   </div>
 
-<<<<<<< HEAD
-                  {/*MARCA*/}
-                  <div className="col-span-full md:col-span-1">
-                    <label className="block text-sm font-bold text-black mb-2">
-                      Marca <span className="text-red-500">*</span>
-=======
                   {/* Modelo / Marca */}
                   <div className="col-span-full md:col-span-1">
                     <label className="block text-sm font-bold text-black mb-2">
                       Modelo / Marca <span className="text-red-500">*</span>
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
                     </label>
                     <select
                       required
@@ -186,21 +157,12 @@ export default function Registro() {
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
-<<<<<<< HEAD
-                      className="block w-1/2 border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:ring-2 focus:ring-primary-500 text-base border outline-none bg-white cursor-pointer"
-                    >
-                      <option value="" disabled>
-                        -- Selecciona la Marca --
-                      </option>
-                      {formData.type !== "Switch" && formData.type !== "Impresora" && (
-=======
                       className="block w-full border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:ring-2 focus:ring-primary-500 text-base border outline-none bg-white cursor-pointer"
                     >
                       <option value="" disabled>
                         -- Selecciona la marca --
                       </option>
                       {formData.type !== "Switch" && (
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
                         <>
                           <option value="Vit">Vit</option>
                           <option value="Lenovo">Lenovo</option>
@@ -212,38 +174,24 @@ export default function Registro() {
                           <option value="Cisco">Cisco</option>
                         </>
                       )}
-<<<<<<< HEAD
-
-                      {formData.type !== "Impresora" && (
-                        <>
-                          <option value="HP">HP</option>
-                          <option value="Lexmark">Lexmark</option>
-                          <option value="Dellcop">Dellcop</option>
-                        </>
-                      )}
-                      {formData.type === "Impresora" && (
-                        <>
-                          <option value="HP">HP</option>
-                          <option value="Lexmark">Lexmark</option>
-                          <option value="Dellcop">Dellcop</option>
-                        </>
-                      )}
-
+                      <>
+                        <option value="HP">HP</option>
+                        <option value="Lexmark">Lexmark</option>
+                        <option value="Dellcop">Dellcop</option>
+                      </>
                     </select>
                   </div>
 
-                {/* MODELO*/}
                   <div className="col-span-full md:col-span-1">
                     <label className="block text-sm font-bold text-black mb-2">
-                     Modelo{" "}
-                      <span className="text-red-500">*</span>
+                      Modelo <span className="text-red-500">*</span>
                     </label>
                     <div className="flex gap-2">
                       <div className="relative flex flex-1">
                         <input
                           type="text"
                           required
-                          className="block w-auto border-gray-300 bg-white rounded-lg shadow-sm py-2 px-3 border outline-none font-mono focus:ring-primary-500 text-sm"
+                          className="block w-full border-gray-300 bg-white rounded-lg shadow-sm py-2 px-3 border outline-none font-mono focus:ring-primary-500 text-sm"
                           placeholder="Thinkpad X1 Carbon Gen 9..."
                           value={formData.model}
                           onChange={(e) =>
@@ -254,27 +202,16 @@ export default function Registro() {
                     </div>
                   </div>
 
-=======
-                    </select>
-                  </div>
-
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
-                  {/* Serial General */}
                   <div className="col-span-full md:col-span-1">
                     <label className="block text-sm font-bold text-black mb-2">
-                      Número de Serie (S/N){" "}
-                      <span className="text-red-500">*</span>
+                      Número de Serie (S/N) <span className="text-red-500">*</span>
                     </label>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-end">
                       <div className="relative flex flex-1">
                         <input
                           type="text"
                           required
-<<<<<<< HEAD
-                          className="block w-1/2 bg-white border-gray-300 rounded-l-lg shadow-sm py-2 px-3 border outline-none font-mono focus:ring-primary-500 text-sm"
-=======
                           className="block w-full border-gray-300 rounded-l-lg shadow-sm py-2 px-3 border outline-none font-mono focus:ring-primary-500 text-sm"
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
                           placeholder="SN-XXXXX-XXXX"
                           value={formData.serial}
                           onChange={(e) =>
@@ -289,47 +226,39 @@ export default function Registro() {
                           <CiSearch size={20} />
                         </button>
                       </div>
-
-                      {/* Estado General B/M */}
-<<<<<<< HEAD
-                      
-                    <div className="col-span-full md:col-span-1">
-                    <label className="block text-sm font-bold text-black mb-2">
-                     Estado{" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    </div>
-
-=======
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
-                      <div className="flex justify-around items-center bg-white border border-gray-300 shadow-sm rounded-lg py-1 px-3 w-[100px]">
-                        <label className="flex items-center space-x-1 cursor-pointer group">
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 text-green-600 rounded border-gray-300"
-                            checked={formData.status === "Bueno"}
-                            onChange={() =>
-                              setFormData({ ...formData, status: "Bueno" })
-                            }
-                          />
-                          <span className="text-[12px] font-bold text-black uppercase">
-                            B
-                          </span>
+                      <div className="flex flex-col gap-1">
+                        <label className="block text-sm font-bold text-black mb-0">
+                          Estado <span className="text-red-500">*</span>
                         </label>
-                        <div className="w-[1px] h-4 bg-gray-200 mx-2"></div>
-                        <label className="flex items-center space-x-1 cursor-pointer group">
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 text-red-600 rounded border-gray-300"
-                            checked={formData.status === "Malo"}
-                            onChange={() =>
-                              setFormData({ ...formData, status: "Malo" })
-                            }
-                          />
-                          <span className="text-[12px] font-bold text-black uppercase">
-                            M
-                          </span>
-                        </label>
+                        <div className="flex justify-around items-center bg-white border border-gray-300 shadow-sm rounded-lg py-1 px-3 w-[100px]">
+                          <label className="flex items-center space-x-1 cursor-pointer group">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 text-green-600 rounded border-gray-300"
+                              checked={formData.status === "Bueno"}
+                              onChange={() =>
+                                setFormData({ ...formData, status: "Bueno" })
+                              }
+                            />
+                            <span className="text-[12px] font-bold text-black uppercase">
+                              B
+                            </span>
+                          </label>
+                          <div className="w-[1px] h-4 bg-gray-200 mx-2"></div>
+                          <label className="flex items-center space-x-1 cursor-pointer group">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 text-red-600 rounded border-gray-300"
+                              checked={formData.status === "Malo"}
+                              onChange={() =>
+                                setFormData({ ...formData, status: "Malo" })
+                              }
+                            />
+                            <span className="text-[12px] font-bold text-black uppercase">
+                              M
+                            </span>
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1022,7 +951,6 @@ export default function Registro() {
                     </div>
                   </div>
                 )}
-<<<<<<< HEAD
 
 
 
@@ -1032,19 +960,10 @@ export default function Registro() {
                     <div className="col-span-full">
                       <h3 className="text-sm font-bold text-blue-800 uppercase">
                         Procedencia del Equipo
-=======
-                {/* UBICACIÓN Y OBSERVACIONES */}
-                <div className="pt-6 border-t border-gray-200 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-blue-50/40 p-4 rounded-xl border border-blue-100">
-                    <div className="col-span-full">
-                      <h3 className="text-sm font-bold text-blue-800 uppercase">
-                        Ubicación de Asignación
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
                       </h3>
                     </div>
                     <div>
                       <label className="block text-sm font-bold text-black mb-2">
-<<<<<<< HEAD
                         Region <span className="text-red-500">*</span>
                       </label>
                       <select
@@ -1246,8 +1165,6 @@ export default function Registro() {
 
                     <div>
                       <label className="block text-sm font-bold text-black mb-2">
-=======
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
                         Ciudad <span className="text-red-500">*</span>
                       </label>
                       <select
@@ -1263,10 +1180,7 @@ export default function Registro() {
                         </option>
                         <option value="Barquisimeto">Barquisimeto</option>
                         <option value="Caracas">Caracas</option>
-<<<<<<< HEAD
                         <option value="San Felipe">San Felipe</option>
-=======
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
                       </select>
                     </div>
                     <div>
@@ -1277,11 +1191,7 @@ export default function Registro() {
                         type="text"
                         required
                         placeholder="Ej: Torre Central"
-<<<<<<< HEAD
                         className="w-full bg-white border-gray-300 rounded-lg py-2 px-3 border outline-none focus:ring-2 focus:ring-primary-500"
-=======
-                        className="w-full border-gray-300 rounded-lg py-2 px-3 border outline-none focus:ring-2 focus:ring-primary-500"
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
                         value={formData.branch}
                         onChange={(e) =>
                           setFormData({ ...formData, branch: e.target.value })
@@ -1294,7 +1204,6 @@ export default function Registro() {
                         <option value="Caracas">Torre Este</option>
                       </select>
                     </div>
-<<<<<<< HEAD
 
                     <div>
                       <label className="block text-sm font-bold text-black mb-2">
@@ -1373,10 +1282,6 @@ export default function Registro() {
                       />
                     </div>
                   
-=======
-                  </div>
-
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
                   <div>
                     <label
                       htmlFor="description"
@@ -1419,7 +1324,6 @@ export default function Registro() {
                   </button>
                 </div>
               </div>
-<<<<<<< HEAD
               </div>
               </div>
             )}
@@ -1427,12 +1331,5 @@ export default function Registro() {
         </div>
       </main >
     </div >
-=======
-            )}
-          </form>
-        </div>
-      </main>
-    </div>
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
   );
 }

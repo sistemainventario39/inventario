@@ -16,10 +16,7 @@
     "lucide-react": "^1.8.0",
     "radix-ui": "^1.4.3",
     "react": "^19.2.4",
-<<<<<<< HEAD
     "react-datepicker": "^9.1.0",
-=======
->>>>>>> 3622d8ea7818f279c12e50359b56fb4b8dad52be
     "react-dom": "^19.2.4",
     "react-icons": "^5.6.0",
     "react-router-dom": "^7.13.2",
