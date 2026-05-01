@@ -67,7 +67,7 @@ export default function Login() {
                     Contraseña
                   </label>
                   <a
-                    href="#"
+                    href="/recuperar-password"
                     className="text-sm font-medium text-primary-600 hover:text-primary-500"
                   >
                     ¿Olvidaste tu contraseña?
@@ -91,20 +91,6 @@ export default function Login() {
                 </div>
               </div>
 
-              <div className="flex items-center">
-                <input
-                  id="remember_me"
-                  type="checkbox"
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded cursor-pointer"
-                />
-                <label
-                  htmlFor="remember_me"
-                  className="ml-2 block text-sm text-gray-700 cursor-pointer"
-                >
-                  Recordar en este equipo
-                </label>
-              </div>
-
               <button
                 type="submit"
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all active:scale-[0.98]"
@@ -115,8 +101,6 @@ export default function Login() {
           </div>
         </div>
       </div>
-
-      {/* Right side: Login form */}
     </div>
   );
 }
