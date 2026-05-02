@@ -1,6 +1,10 @@
 import React, { useMemo, useState } from "react";
 import Header from "../components/layout/Header";
 import { FiSave, FiX } from "react-icons/fi";
+import {useForm} from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { userScheme } from "../validators/userSchema";
+import { z } from "zod";
 
 const initialForm = {
   cedula: "",
@@ -11,9 +15,6 @@ const initialForm = {
   usuario: "",
   password: "",
   rol: "",
-  region: "",
-  estado: "",
-  city: "",
   branch: "",
   piso: "",
   ala: "",
@@ -29,12 +30,9 @@ const seedUsers = [
     telefono: "0414-1234567",
     usuario: "jperez",
     rol: "Admin",
-    region: "Centro",
-    estado: "Lara",
-    city: "Barquisimeto",
     branch: "Torre 30",
     piso: "Piso 1",
-    ala: "Ala 1",
+    ala: "Ala sur",
   },
   {
     id: 2,
@@ -45,12 +43,9 @@ const seedUsers = [
     telefono: "0424-7654321",
     usuario: "mgomez",
     rol: "Superadmin",
-    region: "Lara",
-    estado: "Lara",
-    city: "Barquisimeto",
     branch: "Torre 30",
     piso: "Piso 1",
-    ala: "Ala 1",
+    ala: "Ala norte",
   },
 ];
 
@@ -66,9 +61,6 @@ function validate(values) {
     "usuario",
     "password",
     "rol",
-    "region",
-    "estado",
-    "city",
     "branch",
     "piso",
     "ala",
@@ -111,12 +103,11 @@ export default function RegistroUsuarios() {
     { id: 3, nombre: 'Llanos'},
   ]);
 
-  const [estados, setEstados] = useState([]);
-  const [ciudades, setCiudades] = useState([]);
   const [torres, setTorres] = useState([]);
   const [piso, setPiso] = useState([]);
   const [ala, setAla  ] = useState([]);
 
+<<<<<<< HEAD
   const manejarCambioRegion = (e) => {
     const regionNombre = e.target.value;
     setForm(prev => ({ ...prev, region: regionNombre, estado: '', city: '', branch: '' }));
@@ -162,6 +153,8 @@ export default function RegistroUsuarios() {
       setTorres([]);
     }
   };
+=======
+>>>>>>> c12c0146a7e1dbd42d1d577130038db43f0423df
 
     const manejarCambioTorre = (e) => {
     const torreNombre = e.target.value;
@@ -246,12 +239,11 @@ export default function RegistroUsuarios() {
     setForm(initialForm);
     setTouched({});
     setFocused(null);
-    setEstados([]);
-    setCiudades([]);
     setTorres([]);
     setPiso([]);
     setAla([]);
   };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -457,65 +449,6 @@ export default function RegistroUsuarios() {
 
                   <div>
                     <label className="block text-sm font-bold text-black mb-2">
-                      Region <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      required
-                      className="w-60 border-gray-300 rounded-lg py-2 px-3 border outline-none bg-white focus:ring-2 focus:ring-primary-500"
-                      value={form.region}
-                      onChange={manejarCambioRegion}
-                    >
-                      <option value="">
-                        Seleccione Region
-                      </option>
-                      {region.map(reg => (
-                        <option key={reg.id} value={reg.nombre}>{reg.nombre}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-black mb-2">
-                      Estado <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      disabled={estados.length === 0}
-                      required
-                      className="w-60 bg-white border-gray-300 rounded-lg py-2 px-3 border outline-none focus:ring-2 focus:ring-primary-500"
-                      value={form.estado}
-                      onChange={manejarCambioEstado}
-                    >
-                      <option value="">
-                        Seleccione Estado
-                      </option>
-                      {estados.map(est => (
-                        <option key={est.id} value={est.nombre}>{est.nombre}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-black mb-2">
-                      Ciudad <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      disabled={ciudades.length === 0}
-                      required
-                      className="w-60 border-gray-300 rounded-lg py-2 px-3 border outline-none bg-white focus:ring-2 focus:ring-primary-500"
-                      value={form.city}
-                      onChange={manejarCambioCiudad}
-                    >
-                      <option value="">
-                        Seleccione Ciudad
-                      </option>
-                      {ciudades.map(ciu => (
-                        <option key={ciu.id} value={ciu.nombre}>{ciu.nombre}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-black mb-2">
                       Torre o Centro <span className="text-red-500">*</span>
                     </label>
                     <select
@@ -625,9 +558,6 @@ export default function RegistroUsuarios() {
                         "Usuario",
                         "Rol",
                         "Correo",
-                        "Region",
-                        "Estado",
-                        "Ciudad",
                         "Sede",
                         "Piso",
                         "Ala"
@@ -678,15 +608,6 @@ export default function RegistroUsuarios() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                           {u.email}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                          {u.region}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                          {u.estado}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                          {u.city}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                           {u.branch}

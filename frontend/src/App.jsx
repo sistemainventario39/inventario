@@ -6,6 +6,7 @@ import Busqueda from './pages/Busqueda';
 import Registro from './pages/Registro';
 import Perfil from './pages/Perfil';
 import RegistroUsuarios from "./pages/RegistroUsuarios";
+import RecuperarPassword from "./pages/Recuperar-Password";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/registro" element={<Registro />} />
         <Route path="/registro-usuarios" element={<RegistroUsuarios />} />
         <Route path="/perfil" element={<Perfil />} />
+        <Route path="/recuperar-password" element={<RecuperarPassword />} />
       </Routes>
     </Router>
   );
