@@ -92,17 +92,17 @@ export default function Registro() {
         region: 1,
         estado: 12,
         city: 212,
-        sede: "Torre 30",
-        piso: "Piso 3",
+        sede: 3,
+        piso: 2,
         ala: "",
       },
       torreEste: {
         region: 1,
         estado: 12,
         city: 212,
-        sede: "Torre Este",
-        piso: "Piso 1",
-        ala: "Ala Este",
+        sede: 4,
+        piso: 4,
+        ala: 6,
       },
     };
 
