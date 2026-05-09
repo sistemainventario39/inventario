@@ -160,7 +160,17 @@ export default function RegistroUsuarios() {
                     <input
                       type="text"
                       placeholder="V-12345678"
-                      {...register("cedula")} className={getFieldProps("cedula").className}
+                      {...register("cedula",
+                        {onChange: (e) => {
+                          const nums = e.target.value.replace(/^V-?/, "").replace(/\D/g, "").slice(0, 8);
+                          e.target.value = nums ? `V-${nums}` : "";
+                        },
+                        pattern: {
+                          value: /^V-\d{1,8}$/,
+                          message: "La cédula debe tener el formato V-12345678"
+                        }
+                      }
+                      )} className={getFieldProps("cedula").className}
                     />
                     {getFieldProps("cedula").error && <p className="text-xs text-red-600 mt-1">{getFieldProps("cedula").error}</p>} 
                   </div>
