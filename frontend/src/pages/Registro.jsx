@@ -5,7 +5,8 @@ import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from "date-fns/locale";
-
+import axios from "axios";
+import { equipoSchema } from "../validators/equipoSchema";
 // NUEVAS IMPORTACIONES
 import StatusToggle from "../components/ui/StatusToggle";
 import SerialSearchInput from "../components/ui/SerialSearchInput";
@@ -13,6 +14,22 @@ import LocationSelector from "../components/ui/LocationSelector";
 
 export default function Registro() {
   const navigate = useNavigate();
+  // Estados para controlar el mensaje debajo del Serial
+  const [searchMessages, setSearchMessages] = useState({
+    serial: "",
+    monitorSerial: "",
+    keyboardSerial: "",
+    mouseSerial: "",
+    speakersSerial: "",
+  });
+
+  const [searchErrors, setSearchErrors] = useState({
+    serial: false,
+    monitorSerial: false,
+    keyboardSerial: false,
+    mouseSerial: false,
+    speakersSerial: false,
+  });
   const [formData, setFormData] = useState({
     // Datos Generales
     name: "",
@@ -27,6 +44,8 @@ export default function Registro() {
     ram: "",
     ramSerial: "",
     ramStatus: "Bueno",
+    ramList: [{ capacity: "", status: "Bueno" }],
+    storageList: [{ capacity: "", status: "Bueno" }],
     processor: "",
     processorStatus: "Bueno",
     storage: "",
@@ -70,9 +89,138 @@ export default function Registro() {
     ala: "",
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate("/busqueda");
+
+    try {
+      // 1. Validación de Zod
+      equipoSchema.parse(formData);
+
+      const tipoDispositivo = formData.type.toUpperCase();
+
+      // 2. Estructura Base para TODOS los equipos (PC, Laptop o Periféricos)
+      const payload = {
+        marca: formData.name.trim(),
+        modelo: formData.model.trim(),
+        serial: formData.serial,
+        estado: formData.status,
+        notas: formData.description || "",
+        procedencia: {
+          id_region: formData.regionP,
+          id_estado: formData.estadoP,
+          id_ciudad: formData.cityP,
+          id_sede: formData.sedeP,
+          id_piso: formData.pisoP,
+          id_ala: formData.alaP || null,
+        },
+        asignacion: {
+          id_region: formData.region,
+          id_estado: formData.estado,
+          id_ciudad: formData.city,
+          id_sede: formData.sede,
+          id_piso: formData.piso,
+          id_ala: formData.ala || null,
+        },
+      };
+
+      let url = "";
+
+      // 3. Si es CPU o LAPTOP, agregamos Componentes y Periféricos vinculados
+      if (tipoDispositivo === "CPU" || tipoDispositivo === "LAPTOP") {
+        payload.componentes = [];
+        payload.perifericos = [];
+
+        // Mapear múltiples RAMs (Generamos serial único si está vacío para evitar choques)
+        formData.ramList?.forEach((ram, index) => {
+          if (ram.capacity) {
+            payload.componentes.push({
+              tipo: "memoria_ram",
+              capacidad: ram.capacity,
+              estado: ram.status || formData.status,
+              serial: ram.serial || `RAM-${Date.now()}-${index}`,
+            });
+          }
+        });
+
+        // Mapear múltiples Discos Duros
+        formData.storageList?.forEach((disco, index) => {
+          if (disco.capacity) {
+            payload.componentes.push({
+              tipo: "disco_duro",
+              capacidad: disco.capacity,
+              estado: disco.status || formData.status,
+              serial: disco.serial || `HDD-${Date.now()}-${index}`,
+            });
+          }
+        });
+
+        // Procesador
+        if (formData.processor) {
+          payload.componentes.push({
+            tipo: "procesador",
+            modelo: formData.processor,
+            estado: formData.processorStatus || formData.status,
+            serial: `CPU-${Date.now()}`,
+          });
+        }
+
+        // Periféricos asociados
+        if (formData.hasMonitor && formData.monitorSerial) {
+          payload.perifericos.push({
+            tipo: "monitor",
+            serial: formData.monitorSerial,
+            modelo: formData.monitorBrand,
+            estado: formData.monitorStatus,
+          });
+        }
+        if (formData.hasKeyboard && formData.keyboardSerial) {
+          payload.perifericos.push({
+            tipo: "teclados",
+            serial: formData.keyboardSerial,
+            modelo: formData.keyboardBrand,
+            estado: formData.keyboardStatus,
+          });
+        }
+        if (formData.hasMouse && formData.mouseSerial) {
+          payload.perifericos.push({
+            tipo: "mouse",
+            serial: formData.mouseSerial,
+            modelo: formData.mouseBrand,
+            estado: formData.mouseStatus,
+          });
+        }
+        if (formData.hasSpeakers && formData.speakersSerial) {
+          payload.perifericos.push({
+            tipo: "mouse",
+            serial: formData.speakersSerial,
+            modelo: formData.speakersBrand,
+            estado: formData.speakersStatus,
+          });
+        }
+
+        url =
+          tipoDispositivo === "LAPTOP"
+            ? "http://localhost:3001/api/laptop"
+            : "http://localhost:3001/api/pc";
+      } else {
+        const tipoClean = formData.type.toLowerCase();
+        url = `http://localhost:3001/api/perifericos/${tipoClean}`;
+      }
+
+      // 5. Enviar Petición
+      const response = await axios.post(url, payload);
+      alert(response.data.message || "Equipo registrado exitosamente");
+      navigate("/busqueda"); // Opcional: redirigir o limpiar formulario
+    } catch (error) {
+      if (error.errors) {
+        alert(`Revisa el formulario: ${error.errors[0].message}`);
+      } else {
+        console.error("Error del servidor:", error);
+        alert(
+          error.response?.data?.message || "Ocurrió un error al registrar.",
+        );
+      }
+    }
   };
 
   // Función para autocompletar lol
@@ -133,17 +281,144 @@ export default function Registro() {
   const handleCancel = () => {
     navigate("/dashboard");
   };
+  const handleSearchSerial = async (
+    dispositivo,
+    serialField,
+    capacityField,
+    statusField,
+  ) => {
+    const serialValue = formData[serialField]?.trim();
 
-  const handleSearchSerial = (serialField, capacityField, statusField) => {
-    const serialValue = formData[serialField];
-    if (serialValue === "SN-EXISTENTE") {
-      setFormData((prev) => ({
+    setSearchMessages((prev) => ({
+      ...prev,
+      [serialField]: "",
+    }));
+
+    setSearchErrors((prev) => ({
+      ...prev,
+      [serialField]: false,
+    }));
+
+    if (!serialValue) {
+      setSearchMessages((prev) => ({
         ...prev,
-        [capacityField]: "Asignado por Sistema",
-        [statusField]: "Bueno",
+        [serialField]: "Por favor, ingrese un número de serie antes de buscar.",
       }));
-    } else {
-      alert(`Buscando en base de datos el serial: ${serialValue}`);
+
+      setSearchErrors((prev) => ({
+        ...prev,
+        [serialField]: true,
+      }));
+
+      return;
+    }
+
+    try {
+      const response = await axios.get(
+        `http://localhost:3001/api/${dispositivo}/${encodeURIComponent(serialValue)}`,
+      );
+
+      const resultado = response.data;
+
+      if (resultado.length > 0) {
+        setSearchMessages((prev) => ({
+          ...prev,
+          [serialField]: `El número de serie "${serialValue}" ya se encuentra registrado en el sistema.`,
+        }));
+
+        setSearchErrors((prev) => ({
+          ...prev,
+          [serialField]: true,
+        }));
+
+        if (capacityField && statusField) {
+          setFormData((prev) => ({
+            ...prev,
+            [statusField]: "Bueno",
+          }));
+        }
+      } else {
+        setSearchMessages((prev) => ({
+          ...prev,
+          [serialField]: `El número de serie "${serialValue}" está disponible para registro.`,
+        }));
+
+        setSearchErrors((prev) => ({
+          ...prev,
+          [serialField]: false,
+        }));
+      }
+    } catch (error) {
+      console.error(`Error al buscar el serial en ${dispositivo}:`, error);
+
+      setSearchMessages((prev) => ({
+        ...prev,
+        [serialField]:
+          error.response?.data?.message ||
+          "No se pudo conectar con el servidor.",
+      }));
+
+      setSearchErrors((prev) => ({
+        ...prev,
+        [serialField]: true,
+      }));
+    }
+  };
+
+  const handleSearchSerial2 = async (dispositivo, serialField) => {
+    const serialValue = formData[serialField]?.trim();
+
+    setSearchMessages((prev) => ({ ...prev, [serialField]: "" }));
+    setSearchErrors((prev) => ({ ...prev, [serialField]: false }));
+
+    if (!serialValue) {
+      setSearchMessages((prev) => ({
+        ...prev,
+        [serialField]: "Por favor, ingrese un número de serie.",
+      }));
+      setSearchErrors((prev) => ({ ...prev, [serialField]: true }));
+      return;
+    }
+
+    try {
+      // Apuntamos a la NUEVA API
+      const response = await axios.get(
+        `http://localhost:3001/api/verificar-periferico/${dispositivo}/${encodeURIComponent(serialValue)}`,
+      );
+
+      const resultado = response.data;
+
+      if (resultado.existe && resultado.asignado) {
+        // Existe y está ASIGNADO a un equipo
+        setSearchMessages((prev) => ({
+          ...prev,
+          [serialField]: resultado.message,
+        }));
+        setSearchErrors((prev) => ({ ...prev, [serialField]: true }));
+      } else if (resultado.existe && !resultado.asignado) {
+        // Existe pero NO está asignado
+        setSearchMessages((prev) => ({
+          ...prev,
+          [serialField]: resultado.message,
+        }));
+        setSearchErrors((prev) => ({ ...prev, [serialField]: false }));
+      } else {
+        // No existe, está libre para registrarse
+        setSearchMessages((prev) => ({
+          ...prev,
+          [serialField]: resultado.message,
+        }));
+        setSearchErrors((prev) => ({ ...prev, [serialField]: false }));
+      }
+    } catch (error) {
+      console.error(`Error al buscar el serial en ${dispositivo}:`, error);
+      setSearchMessages((prev) => ({
+        ...prev,
+        [serialField]:
+          error.response?.data?.message ||
+          "No se pudo conectar con el servidor.",
+      }));
+      setSearchErrors((prev) => ({ ...prev, [serialField]: true }));
     }
   };
 
@@ -207,23 +482,58 @@ export default function Registro() {
                   {/* Contenedor Serial + Estado (REFACTORIZADO) */}
                   <div className="col-span-full">
                     <div className="flex flex-col md:flex-row gap-4 items-end">
-                      {/* Sección Número de Serie - REFACTORIZADO CON SerialSearchInput */}
-                      <div className="w-full md:flex-1">
-                        <label className="block text-sm font-bold text-black mb-2">
-                          Número de Serie (S/N){" "}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <SerialSearchInput
-                          value={formData.serial}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              serial: e.target.value,
-                            })
-                          }
-                          onSearch={() => handleSearchSerial("serial")}
-                        />
-                      </div>
+                      {formData.type && formData.type !== "" && (
+                        <div className="w-full md:flex-1">
+                          <label className="block text-sm font-bold text-black mb-2">
+                            Número de Serie de {formData.type} (S/N){" "}
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <SerialSearchInput
+                            value={formData.serial}
+                            onChange={(e) => {
+                              const value = e.target.value;
+
+                              // limpiar mensaje si estaba visible
+                              if (searchMessages.serial) {
+                                setSearchMessages((prev) => ({
+                                  ...prev,
+                                  serial: "",
+                                }));
+                              }
+
+                              // actualizar input (ESTO ES LO QUE TE FALTABA)
+                              setFormData((prev) => ({
+                                ...prev,
+                                serial: value,
+                              }));
+                            }}
+                            onSearch={() =>
+                              handleSearchSerial(
+                                formData.type.toLowerCase(),
+                                "serial",
+                                "capacidad",
+                                "estado",
+                              )
+                            }
+                            className={
+                              searchErrors.serial ? "border-red-500" : ""
+                            }
+                          />
+
+                          {/* MENSAJE ESTILIZADO DEBAJO DEL INPUT */}
+                          {searchMessages.serial && (
+                            <p
+                              className={`text-xs mt-1 transition-all duration-200 ${
+                                searchErrors.serial
+                                  ? "text-red-500 font-medium"
+                                  : "text-emerald-600 font-medium"
+                              }`}
+                            >
+                              {searchMessages.serial}
+                            </p>
+                          )}
+                        </div>
+                      )}
 
                       {/* Sección Estado - REFACTORIZADO CON StatusToggle */}
                       <div className="w-full md:w-auto">
@@ -243,7 +553,7 @@ export default function Registro() {
                   {/* Modelo / Marca */}
                   <div className="col-span-full md:col-span-1">
                     <label className="block text-sm font-bold text-black mb-2">
-                      Modelo / Marca <span className="text-red-500">*</span>
+                      Marca <span className="text-red-500">*</span>
                     </label>
                     <select
                       required
@@ -306,121 +616,178 @@ export default function Registro() {
                     </h3>
 
                     {/* Memoria RAM (REFACTORIZADO) */}
-                    <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                      <div className="md:col-span-6">
-                        <label className="block text-xs font-bold text-black mb-1 uppercase">
-                          Serial Memoria RAM
-                        </label>
-                        {/* REFACTORIZADO CON SerialSearchInput (Estilo custom) */}
-                        <SerialSearchInput
-                          placeholder="S/N RAM..."
-                          inputClassName="py-1.5 focus:ring-1 focus:ring-blue-400 rounded-l-md"
-                          buttonColor="bg-primary-600 hover:bg-primary-700 rounded-r-md"
-                          buttonIconSize={16}
-                          value={formData.ramSerial}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              ramSerial: e.target.value,
-                            })
-                          }
-                          onSearch={() =>
-                            handleSearchSerial("ramSerial", "ram", "ramStatus")
-                          }
-                        />
-                      </div>
-                      <div className="md:col-span-4">
-                        <label className="block text-xs font-bold text-black mb-1 uppercase">
-                          Capacidad
-                        </label>
-                        <select
-                          className="w-full h-10 border-gray-300 rounded-md py-1.5 px-3 text-sm border outline-none focus:ring-1 focus:ring-blue-400 bg-white"
-                          value={formData.ram}
-                          onChange={(e) =>
-                            setFormData({ ...formData, ram: e.target.value })
-                          }
+                    {/* Memoria RAM (Soporte Múltiple) */}
+                    <div className="space-y-3">
+                      <label className="block text-xs font-bold text-black mb-1 uppercase">
+                        Memorias RAM
+                      </label>
+                      {formData.ramList.map((ram, index) => (
+                        <div
+                          key={`ram-${index}`}
+                          className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-4 items-end"
                         >
-                          <option value="">-- Seleccione --</option>
-                          <option value="1GB DDR2">1GB DDR2</option>
-                          <option value="2GB DDR2">2GB DDR2</option>
-                          <option value="4GB DDR2">4GB DDR2</option>
-                          <option value="1GB DDR3">1GB DDR3</option>
-                          <option value="2GB DDR3">2GB DDR3</option>
-                          <option value="4GB DDR3">4GB DDR3</option>
-                        </select>
-                      </div>
-                      <div className="md:col-span-2">
-                        {/* REFACTORIZADO CON StatusToggle (Estilo custom) */}
-                        <StatusToggle
-                          status={formData.ramStatus}
-                          onStatusChange={(newStatus) =>
-                            setFormData({ ...formData, ramStatus: newStatus })
-                          }
-                        />
-                      </div>
+                          <div className="md:col-span-8">
+                            <select
+                              className="w-full h-10 border-gray-300 rounded-md py-1.5 px-3 text-sm border outline-none focus:ring-1 focus:ring-blue-400 bg-white"
+                              value={ram.capacity}
+                              onChange={(e) => {
+                                const newRamList = [...formData.ramList];
+                                newRamList[index].capacity = e.target.value;
+                                setFormData({
+                                  ...formData,
+                                  ramList: newRamList,
+                                });
+                              }}
+                            >
+                              <option value="">
+                                -- Seleccione Capacidad --
+                              </option>
+                              <option value="1GB DDR2">1GB DDR2</option>
+                              <option value="2GB DDR2">2GB DDR2</option>
+                              <option value="4GB DDR2">4GB DDR2</option>
+                              <option value="1GB DDR3">1GB DDR3</option>
+                              <option value="2GB DDR3">2GB DDR3</option>
+                              <option value="4GB DDR3">4GB DDR3</option>
+                            </select>
+                          </div>
+                          <div className="md:col-span-3">
+                            <StatusToggle
+                              status={ram.status}
+                              onStatusChange={(newStatus) => {
+                                const newRamList = [...formData.ramList];
+                                newRamList[index].status = newStatus;
+                                setFormData({
+                                  ...formData,
+                                  ramList: newRamList,
+                                });
+                              }}
+                            />
+                          </div>
+                          <div className="md:col-span-1 flex gap-2 justify-end">
+                            {formData.ramList.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setFormData({
+                                    ...formData,
+                                    ramList: formData.ramList.filter(
+                                      (_, i) => i !== index,
+                                    ),
+                                  })
+                                }
+                                className="w-10 h-10 flex items-center justify-center bg-red-50 text-red-600 border border-red-200 rounded-md hover:bg-red-100 transition-colors"
+                              >
+                                <FiX size={16} />
+                              </button>
+                            )}
+                            {index === formData.ramList.length - 1 && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setFormData({
+                                    ...formData,
+                                    ramList: [
+                                      ...formData.ramList,
+                                      { capacity: "", status: "Bueno" },
+                                    ],
+                                  })
+                                }
+                                className="w-10 h-10 flex items-center justify-center bg-blue-50 text-blue-600 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors font-bold text-lg"
+                              >
+                                +
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
 
-                    {/* Disco Duro (REFACTORIZADO) */}
-                    <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                      <div className="md:col-span-6">
-                        <label className="block text-xs font-bold text-black mb-1 uppercase">
-                          Serial Disco Duro
-                        </label>
-                        {/* REFACTORIZADO CON SerialSearchInput */}
-                        <SerialSearchInput
-                          placeholder="S/N Disco..."
-                          inputClassName="py-1.5 focus:ring-1 focus:ring-blue-400 rounded-l-md"
-                          buttonColor="bg-primary-600 hover:bg-primary-700 rounded-r-md"
-                          buttonIconSize={16}
-                          value={formData.storageSerial}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              storageSerial: e.target.value,
-                            })
-                          }
-                          onSearch={() =>
-                            handleSearchSerial(
-                              "storageSerial",
-                              "storage",
-                              "storageStatus",
-                            )
-                          }
-                        />
-                      </div>
-                      <div className="md:col-span-4">
-                        <label className="block text-xs font-bold text-black mb-1 uppercase">
-                          Capacidad
-                        </label>
-                        <select
-                          className="w-full h-10 border-gray-300 rounded-md py-1.5 px-3 text-sm border outline-none focus:ring-1 focus:ring-blue-400 bg-white"
-                          value={formData.storage}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              storage: e.target.value,
-                            })
-                          }
+                    {/* Disco Duro (Soporte Múltiple) */}
+                    <div className="space-y-3 mt-4">
+                      <label className="block text-xs font-bold text-black mb-1 uppercase">
+                        Discos Duros / Almacenamiento
+                      </label>
+                      {formData.storageList.map((storage, index) => (
+                        <div
+                          key={`storage-${index}`}
+                          className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-4 items-end"
                         >
-                          <option value="">-- Seleccione --</option>
-                          <option value="120GB HDD">120GB HDD</option>
-                          <option value="250GB HDD">250GB HDD</option>
-                          <option value="500GB HDD">500GB HDD</option>
-                          <option value="1TB HDD">1TB HDD</option>
-                        </select>
-                      </div>
-                      <div className="md:col-span-2">
-                        {/* REFACTORIZADO CON StatusToggle */}
-                        <StatusToggle
-                          status={formData.storageStatus}
-                          onStatusChange={(newStatus) =>
-                            setFormData({
-                              ...formData,
-                              storageStatus: newStatus,
-                            })
-                          }
-                        />
-                      </div>
+                          <div className="md:col-span-8">
+                            <select
+                              className="w-full h-10 border-gray-300 rounded-md py-1.5 px-3 text-sm border outline-none focus:ring-1 focus:ring-blue-400 bg-white"
+                              value={storage.capacity}
+                              onChange={(e) => {
+                                const newStorageList = [
+                                  ...formData.storageList,
+                                ];
+                                newStorageList[index].capacity = e.target.value;
+                                setFormData({
+                                  ...formData,
+                                  storageList: newStorageList,
+                                });
+                              }}
+                            >
+                              <option value="">
+                                -- Seleccione Capacidad --
+                              </option>
+                              <option value="120GB HDD">120GB HDD</option>
+                              <option value="250GB HDD">250GB HDD</option>
+                              <option value="500GB HDD">500GB HDD</option>
+                              <option value="1TB HDD">1TB HDD</option>
+                            </select>
+                          </div>
+                          <div className="md:col-span-3">
+                            <StatusToggle
+                              status={storage.status}
+                              onStatusChange={(newStatus) => {
+                                const newStorageList = [
+                                  ...formData.storageList,
+                                ];
+                                newStorageList[index].status = newStatus;
+                                setFormData({
+                                  ...formData,
+                                  storageList: newStorageList,
+                                });
+                              }}
+                            />
+                          </div>
+                          <div className="md:col-span-1 flex gap-2 justify-end">
+                            {formData.storageList.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setFormData({
+                                    ...formData,
+                                    storageList: formData.storageList.filter(
+                                      (_, i) => i !== index,
+                                    ),
+                                  })
+                                }
+                                className="w-10 h-10 flex items-center justify-center bg-red-50 text-red-600 border border-red-200 rounded-md hover:bg-red-100 transition-colors"
+                              >
+                                <FiX size={16} />
+                              </button>
+                            )}
+                            {index === formData.storageList.length - 1 && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setFormData({
+                                    ...formData,
+                                    storageList: [
+                                      ...formData.storageList,
+                                      { capacity: "", status: "Bueno" },
+                                    ],
+                                  })
+                                }
+                                className="w-10 h-10 flex items-center justify-center bg-blue-50 text-blue-600 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors font-bold text-lg"
+                              >
+                                +
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
 
                     {/* Procesador (REFACTORIZADO) */}
@@ -470,16 +837,16 @@ export default function Registro() {
                 {/* PERIFÉRICOS ASIGNADOS */}
                 {(formData.type === "CPU" || formData.type === "Laptop") && (
                   <div className="space-y-4 pt-4">
-                    <h3 className="text-xs font-bold text-purple-600 uppercase tracking-widest border-b border-purple-100 pb-2">
+                    <h3 className="text-xs font-bold text-blue-600 uppercase tracking-widest border-b border-blue-100 pb-2">
                       Periféricos Asignados a esta Torre
                     </h3>
 
-                    {/* Monitor (REFACTORIZADO) */}
-                    <div className="bg-purple-50/30 p-4 rounded-xl border border-purple-100 shadow-sm flex flex-col gap-3">
+                    {/* Monitor */}
+                    <div className="bg-blue-50/30 p-4 rounded-xl border border-blue-100 shadow-sm flex flex-col gap-3">
                       <label className="flex items-center space-x-2 cursor-pointer w-fit">
                         <input
                           type="checkbox"
-                          className="h-4 w-4 text-purple-600 rounded border-gray-300"
+                          className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-400"
                           checked={formData.hasMonitor}
                           onChange={(e) =>
                             setFormData({
@@ -488,7 +855,7 @@ export default function Registro() {
                             })
                           }
                         />
-                        <span className="text-sm font-bold text-purple-800 uppercase tracking-wide">
+                        <span className="text-sm font-bold text-blue-800 uppercase tracking-wide">
                           Incluir Monitor
                         </span>
                       </label>
@@ -499,11 +866,10 @@ export default function Registro() {
                             <label className="block text-xs font-bold text-black mb-1 uppercase">
                               Serial del Monitor
                             </label>
-                            {/* REFACTORIZADO CON SerialSearchInput (Estilo Morado) */}
                             <SerialSearchInput
                               placeholder="S/N Monitor..."
-                              inputClassName="py-1.5 focus:ring-1 focus:ring-purple-400 rounded-l-md"
-                              buttonColor="bg-purple-600 hover:bg-purple-700 rounded-r-md"
+                              inputClassName="py-1.5 focus:ring-1 focus:ring-blue-400 rounded-l-md"
+                              buttonColor="bg-blue-600 hover:bg-blue-700 rounded-r-md"
                               buttonIconSize={16}
                               value={formData.monitorSerial}
                               onChange={(e) =>
@@ -512,21 +878,29 @@ export default function Registro() {
                                   monitorSerial: e.target.value,
                                 })
                               }
+                              // BUSCADOR EN BASE DE DATOS: tabla 'monitor'
                               onSearch={() =>
-                                handleSearchSerial(
-                                  "monitorSerial",
-                                  "monitorBrand",
-                                  "monitorStatus",
-                                )
+                                handleSearchSerial2("monitor", "monitorSerial")
                               }
                             />
+                            {searchMessages.monitorSerial && (
+                              <p
+                                className={`text-xs mt-1 ${
+                                  searchErrors.monitorSerial
+                                    ? "text-red-500 font-medium"
+                                    : "text-emerald-600 font-medium"
+                                }`}
+                              >
+                                {searchMessages.monitorSerial}
+                              </p>
+                            )}
                           </div>
                           <div className="md:col-span-4">
                             <label className="block text-xs font-bold text-black mb-1 uppercase">
                               Marca
                             </label>
                             <select
-                              className="w-full h-10 border-gray-300 rounded-md py-1.5 px-3 text-sm border outline-none focus:ring-1 focus:ring-purple-400"
+                              className="w-full h-10 border-gray-300 rounded-md py-1.5 px-3 text-sm border outline-none focus:ring-1 focus:ring-blue-400"
                               value={formData.monitorBrand}
                               onChange={(e) =>
                                 setFormData({
@@ -544,7 +918,6 @@ export default function Registro() {
                             </select>
                           </div>
                           <div className="md:col-span-2">
-                            {/* REFACTORIZADO CON StatusToggle */}
                             <StatusToggle
                               status={formData.monitorStatus}
                               onStatusChange={(newStatus) =>
@@ -559,12 +932,12 @@ export default function Registro() {
                       )}
                     </div>
 
-                    {/* Teclado (REFACTORIZADO) */}
-                    <div className="bg-purple-50/30 p-4 rounded-xl border border-purple-100 shadow-sm flex flex-col gap-3">
+                    {/* Teclado */}
+                    <div className="bg-blue-50/30 p-4 rounded-xl border border-blue-100 shadow-sm flex flex-col gap-3">
                       <label className="flex items-center space-x-2 cursor-pointer w-fit">
                         <input
                           type="checkbox"
-                          className="h-4 w-4 text-purple-600 rounded border-gray-300"
+                          className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-400"
                           checked={formData.hasKeyboard}
                           onChange={(e) =>
                             setFormData({
@@ -573,7 +946,7 @@ export default function Registro() {
                             })
                           }
                         />
-                        <span className="text-sm font-bold text-purple-800 uppercase tracking-wide">
+                        <span className="text-sm font-bold text-blue-800 uppercase tracking-wide">
                           Incluir Teclado
                         </span>
                       </label>
@@ -584,11 +957,10 @@ export default function Registro() {
                             <label className="block text-xs font-bold text-black mb-1 uppercase">
                               Serial del Teclado
                             </label>
-                            {/* REFACTORIZADO CON SerialSearchInput */}
                             <SerialSearchInput
                               placeholder="S/N Teclado..."
-                              inputClassName="py-1.5 focus:ring-1 focus:ring-purple-400 rounded-l-md"
-                              buttonColor="bg-purple-600 hover:bg-purple-700 rounded-r-md"
+                              inputClassName="py-1.5 focus:ring-1 focus:ring-blue-400 rounded-l-md"
+                              buttonColor="bg-blue-600 hover:bg-blue-700 rounded-r-md"
                               buttonIconSize={16}
                               value={formData.keyboardSerial}
                               onChange={(e) =>
@@ -597,21 +969,32 @@ export default function Registro() {
                                   keyboardSerial: e.target.value,
                                 })
                               }
+                              // BUSCADOR EN BASE DE DATOS: tabla 'teclado'
                               onSearch={() =>
-                                handleSearchSerial(
+                                handleSearchSerial2(
+                                  "teclados",
                                   "keyboardSerial",
-                                  "keyboardBrand",
-                                  "keyboardStatus",
                                 )
                               }
                             />
+                            {searchMessages.keyboardSerial && (
+                              <p
+                                className={`text-xs mt-1 ${
+                                  searchErrors.keyboardSerial
+                                    ? "text-red-500 font-medium"
+                                    : "text-emerald-600 font-medium"
+                                }`}
+                              >
+                                {searchMessages.keyboardSerial}
+                              </p>
+                            )}
                           </div>
                           <div className="md:col-span-4">
                             <label className="block text-xs font-bold text-black mb-1 uppercase">
                               Marca
                             </label>
                             <select
-                              className="w-full h-10 border-gray-300 rounded-md py-1.5 px-3 text-sm border outline-none focus:ring-1 focus:ring-purple-400"
+                              className="w-full h-10 border-gray-300 rounded-md py-1.5 px-3 text-sm border outline-none focus:ring-1 focus:ring-blue-400"
                               value={formData.keyboardBrand}
                               onChange={(e) =>
                                 setFormData({
@@ -629,7 +1012,6 @@ export default function Registro() {
                             </select>
                           </div>
                           <div className="md:col-span-2">
-                            {/* REFACTORIZADO CON StatusToggle */}
                             <StatusToggle
                               status={formData.keyboardStatus}
                               onStatusChange={(newStatus) =>
@@ -644,12 +1026,12 @@ export default function Registro() {
                       )}
                     </div>
 
-                    {/* Mouse (REFACTORIZADO) */}
-                    <div className="bg-purple-50/30 p-4 rounded-xl border border-purple-100 shadow-sm flex flex-col gap-3">
+                    {/* Mouse */}
+                    <div className="bg-blue-50/30 p-4 rounded-xl border border-blue-100 shadow-sm flex flex-col gap-3">
                       <label className="flex items-center space-x-2 cursor-pointer w-fit">
                         <input
                           type="checkbox"
-                          className="h-4 w-4 text-purple-600 rounded border-gray-300"
+                          className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-400"
                           checked={formData.hasMouse}
                           onChange={(e) =>
                             setFormData({
@@ -658,7 +1040,7 @@ export default function Registro() {
                             })
                           }
                         />
-                        <span className="text-sm font-bold text-purple-800 uppercase tracking-wide">
+                        <span className="text-sm font-bold text-blue-800 uppercase tracking-wide">
                           Incluir Mouse
                         </span>
                       </label>
@@ -669,11 +1051,10 @@ export default function Registro() {
                             <label className="block text-xs font-bold text-black mb-1 uppercase">
                               Serial del Mouse
                             </label>
-                            {/* REFACTORIZADO CON SerialSearchInput */}
                             <SerialSearchInput
                               placeholder="S/N Mouse..."
-                              inputClassName="py-1.5 focus:ring-1 focus:ring-purple-400 rounded-l-md"
-                              buttonColor="bg-purple-600 hover:bg-purple-700 rounded-r-md"
+                              inputClassName="py-1.5 focus:ring-1 focus:ring-blue-400 rounded-l-md"
+                              buttonColor="bg-blue-600 hover:bg-blue-700 rounded-r-md"
                               buttonIconSize={16}
                               value={formData.mouseSerial}
                               onChange={(e) =>
@@ -682,21 +1063,29 @@ export default function Registro() {
                                   mouseSerial: e.target.value,
                                 })
                               }
+                              // BUSCADOR EN BASE DE DATOS: tabla 'mouse'
                               onSearch={() =>
-                                handleSearchSerial(
-                                  "mouseSerial",
-                                  "mouseBrand",
-                                  "mouseStatus",
-                                )
+                                handleSearchSerial2("mouse", "mouseSerial")
                               }
                             />
+                            {searchMessages.mouseSerial && (
+                              <p
+                                className={`text-xs mt-1 ${
+                                  searchErrors.mouseSerial
+                                    ? "text-red-500 font-medium"
+                                    : "text-emerald-600 font-medium"
+                                }`}
+                              >
+                                {searchMessages.mouseSerial}
+                              </p>
+                            )}
                           </div>
                           <div className="md:col-span-4">
                             <label className="block text-xs font-bold text-black mb-1 uppercase">
                               Marca
                             </label>
                             <select
-                              className="w-full h-10 border-gray-300 rounded-md py-1.5 px-3 text-sm border outline-none focus:ring-1 focus:ring-purple-400"
+                              className="w-full h-10 border-gray-300 rounded-md py-1.5 px-3 text-sm border outline-none focus:ring-1 focus:ring-blue-400"
                               value={formData.mouseBrand}
                               onChange={(e) =>
                                 setFormData({
@@ -714,7 +1103,6 @@ export default function Registro() {
                             </select>
                           </div>
                           <div className="md:col-span-2">
-                            {/* REFACTORIZADO CON StatusToggle */}
                             <StatusToggle
                               status={formData.mouseStatus}
                               onStatusChange={(newStatus) =>
@@ -729,12 +1117,12 @@ export default function Registro() {
                       )}
                     </div>
 
-                    {/* Cornetas (REFACTORIZADO) */}
-                    <div className="bg-purple-50/30 p-4 rounded-xl border border-purple-100 shadow-sm flex flex-col gap-3">
+                    {/* Cornetas */}
+                    <div className="bg-blue-50/30 p-4 rounded-xl border border-blue-100 shadow-sm flex flex-col gap-3">
                       <label className="flex items-center space-x-2 cursor-pointer w-fit">
                         <input
                           type="checkbox"
-                          className="h-4 w-4 text-purple-600 rounded border-gray-300"
+                          className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-400"
                           checked={formData.hasSpeakers}
                           onChange={(e) =>
                             setFormData({
@@ -743,7 +1131,7 @@ export default function Registro() {
                             })
                           }
                         />
-                        <span className="text-sm font-bold text-purple-800 uppercase tracking-wide">
+                        <span className="text-sm font-bold text-blue-800 uppercase tracking-wide">
                           Incluir Cornetas
                         </span>
                       </label>
@@ -754,11 +1142,10 @@ export default function Registro() {
                             <label className="block text-xs font-bold text-black mb-1 uppercase">
                               Serial de las Cornetas
                             </label>
-                            {/* REFACTORIZADO CON SerialSearchInput */}
                             <SerialSearchInput
                               placeholder="S/N Cornetas..."
-                              inputClassName="py-1.5 focus:ring-1 focus:ring-purple-400 rounded-l-md"
-                              buttonColor="bg-purple-600 hover:bg-purple-700 rounded-r-md"
+                              inputClassName="py-1.5 focus:ring-1 focus:ring-blue-400 rounded-l-md"
+                              buttonColor="bg-blue-600 hover:bg-blue-700 rounded-r-md"
                               buttonIconSize={16}
                               value={formData.speakersSerial}
                               onChange={(e) =>
@@ -767,21 +1154,32 @@ export default function Registro() {
                                   speakersSerial: e.target.value,
                                 })
                               }
+                              // BUSCADOR EN BASE DE DATOS: tabla 'corneta'
                               onSearch={() =>
-                                handleSearchSerial(
+                                handleSearchSerial2(
+                                  "cornetas",
                                   "speakersSerial",
-                                  "speakersBrand",
-                                  "speakersStatus",
                                 )
                               }
                             />
+                            {searchMessages.speakersSerial && (
+                              <p
+                                className={`text-xs mt-1 ${
+                                  searchErrors.speakersSerial
+                                    ? "text-red-500 font-medium"
+                                    : "text-emerald-600 font-medium"
+                                }`}
+                              >
+                                {searchMessages.speakersSerial}
+                              </p>
+                            )}
                           </div>
                           <div className="md:col-span-4">
                             <label className="block text-xs font-bold text-black mb-1 uppercase">
                               Marca
                             </label>
                             <select
-                              className="w-full h-10 border-gray-300 rounded-md py-1.5 px-3 text-sm border outline-none focus:ring-1 focus:ring-purple-400"
+                              className="w-full h-10 border-gray-300 rounded-md py-1.5 px-3 text-sm border outline-none focus:ring-1 focus:ring-blue-400"
                               value={formData.speakersBrand}
                               onChange={(e) =>
                                 setFormData({
@@ -799,7 +1197,6 @@ export default function Registro() {
                             </select>
                           </div>
                           <div className="md:col-span-2">
-                            {/* REFACTORIZADO CON StatusToggle */}
                             <StatusToggle
                               status={formData.speakersStatus}
                               onStatusChange={(newStatus) =>
@@ -818,9 +1215,13 @@ export default function Registro() {
 
                 {/* UBICACION DE LLEGADA DE PROCEDENCIA (REFACTORIZADO COMPLETO) */}
                 <div className="pt-6 border-t border-gray-200 space-y-6">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <h3 className="text-sm font-bold text-blue-800 uppercase">
+                      Procedencia del Equipo
+                    </h3>
+                  </div>
                   {/* REFACTORIZADO CON LocationSelector */}
                   <LocationSelector
-                    title="Procedencia del Equipo"
                     radioGroupName="procedencia_default"
                     formData={formData}
                     setFormData={setFormData}
@@ -831,9 +1232,13 @@ export default function Registro() {
 
                 {/* ASIGNACION DE ALMACÉN (REFACTORIZADO COMPLETO) */}
                 <div className="pt-6 border-t border-gray-200 space-y-6">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <h3 className="text-sm font-bold text-blue-800 uppercase">
+                      Asignación de Almacén
+                    </h3>
+                  </div>
                   {/* REFACTORIZADO CON LocationSelector */}
                   <LocationSelector
-                    title="Asignación de Almacén"
                     radioGroupName="asignacion_default"
                     formData={formData}
                     setFormData={setFormData}

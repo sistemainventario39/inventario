@@ -19,10 +19,10 @@ export default function StatusToggle({ status, onStatusChange }) {
         <input
           type="checkbox"
           className="h-4 w-4 text-red-600 rounded border-gray-300 focus:ring-red-500"
-          checked={status === "Malo"}
-          onChange={() => onStatusChange("Malo")}
+          checked={status === "Defectuoso"}
+          onChange={() => onStatusChange("Defectuoso")}
         />
-        <span className="text-xs font-bold text-black">M</span>
+        <span className="text-xs font-bold text-black">D</span>
       </label>
     </div>
   );

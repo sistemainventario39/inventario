@@ -17,16 +17,14 @@ async function checkDatabase() {
   );
 
   const names = cols.map((c) => c.COLUMN_NAME);
-  const ok =
-    names.includes("reset_token") && names.includes("token_expires");
+  const ok = names.includes("reset_token") && names.includes("token_expires");
 
-  console.log(ok ? "✓ MySQL: columnas reset_token y token_expires OK" : "✗ MySQL: faltan columnas. Ejecuta migrations/001_add_password_reset_columns.sql");
-
-  const [users] = await pool.execute(
-    `SELECT p.correo FROM personas p LIMIT 3`,
-  );
+  const [users] = await pool.execute(`SELECT p.correo FROM personas p LIMIT 3`);
   if (users.length > 0) {
-    console.log("  Correos de ejemplo en BD:", users.map((u) => u.correo).join(", "));
+    console.log(
+      "  Correos de ejemplo en BD:",
+      users.map((u) => u.correo).join(", "),
+    );
   } else {
     console.log("  ⚠ No hay personas registradas para probar.");
   }
@@ -79,7 +77,9 @@ async function checkApi(email) {
       return rows[0];
     }
     if (rows.length) {
-      console.log("  (Correo existe pero no se generó token — revisa logs del servidor)");
+      console.log(
+        "  (Correo existe pero no se generó token — revisa logs del servidor)",
+      );
     }
     return null;
   } catch (e) {
@@ -98,7 +98,9 @@ async function main() {
 
   if (!testEmail) {
     console.log("\nPara probar el endpoint, ejecuta:");
-    console.log('  node scripts/verificar-recuperacion.js correo@ejemplo.com\n');
+    console.log(
+      "  node scripts/verificar-recuperacion.js correo@ejemplo.com\n",
+    );
     await pool.end();
     process.exit(dbOk && smtpOk ? 0 : 1);
   }

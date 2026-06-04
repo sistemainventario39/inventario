@@ -85,4 +85,35 @@ Router.get("/ala", async (req, res) => {
   }
 });
 
+Router.get("/ubicaciones", async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        r.id_region,
+        r.region,
+        e.id_estado,
+        e.estado,
+        c.id_ciudad,
+        c.ciudad,
+        s.id_sede,
+        s.sede,
+        p.id_piso,
+        p.piso,
+        p.alas
+      FROM sede s
+      INNER JOIN ciudades c ON s.id_ciudad = c.id_ciudad
+      INNER JOIN estados e ON c.id_estado = e.id_estado
+      INNER JOIN region r ON e.id_region = r.id_region
+      LEFT JOIN piso p ON p.id_sede = s.id_sede
+      ORDER BY s.sede, p.piso;
+    `;
+
+    const [rows] = await pool.execute(query);
+    res.status(200).json(rows);
+  } catch (e) {
+    console.error("Error al obtener el maestro de ubicaciones:", e);
+    res.status(500).json({ message: "Error interno del servidor" });
+  }
+});
+
 export default Router;

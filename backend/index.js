@@ -39,21 +39,10 @@ app.use("/api", recuperarPassword);
 const server = app.listen(PORT, () => {
   const smtpUser = env("SMTP_USER");
   const smtpOk = Boolean(smtpUser && env("SMTP_PASS") && getTransporter());
-  console.log("-------------------------------------------");
-  console.log(`Servidor activo → http://localhost:${PORT}`);
-  console.log(`PID de este proceso: ${process.pid}`);
-  console.log(`SMTP: ${smtpOk ? `OK (${smtpUser})` : "NO configurado"}`);
-  console.log("-------------------------------------------");
 });
 
 server.on("error", (err) => {
   if (err.code === "EADDRINUSE") {
-    console.error(
-      `\n❌ El puerto ${PORT} ya está en uso (otro node index.js antiguo).`,
-    );
-    console.error("   Cierra el proceso anterior o ejecuta:");
-    console.error(`   netstat -ano | findstr :${PORT}`);
-    console.error("   taskkill /PID <numero> /F\n");
   } else {
     console.error(err);
   }

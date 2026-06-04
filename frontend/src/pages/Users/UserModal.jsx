@@ -13,16 +13,15 @@ import {
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
+import LocationSelector from "@/components/ui/LocationSelector";
 import { userSchema } from "../../validators/userSchema";
-import { useUbicaciones } from "../../controllers/useUbicacion.js";
 
 export default function UserModal({
   isOpen,
   onClose,
   user,
   type,
-  refreshUsers,
+  onUserUpdated,
 }) {
   // =========================
   // REACT HOOK FORM
@@ -31,8 +30,9 @@ export default function UserModal({
     register,
     handleSubmit,
     reset,
-    watch,
+    getValues,
     setValue,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(userSchema),
@@ -58,29 +58,37 @@ export default function UserModal({
   // =========================
   // WATCHS
   // =========================
-  const regionActual = watch("region");
-  const estadoActual = watch("estado");
-  const ciudadActual = watch("city");
-  const sedeActual = watch("sede");
-
+  const formValues = watch();
   // =========================
   // UBICACIONES
   // =========================
-  const {
-    regionList,
-    estadoList,
-    ciudadesList,
-    sedeList,
-    pisoList,
-    alaList,
-    setEstadoList,
-    setCiudadesList,
-  } = useUbicaciones({
-    regionActual,
-    estadoActual,
-    ciudadActual,
-    sedeActual,
-  });
+  // Sincroniza los cambios del componente LocationSelector con react-hook-form
+  const handleSetFormData = (updater) => {
+    const nextValues =
+      typeof updater === "function" ? updater(formValues) : updater;
+
+    Object.entries(nextValues).forEach(([key, value]) => {
+      // Obtenemos el valor que tiene actualmente el formulario
+      const currentValue = getValues(key);
+
+      // Solo obligamos a validar si el nuevo valor es diferente al actual
+      const cambioElValor = currentValue !== value;
+
+      setValue(key, value, {
+        shouldValidate: cambioElValor,
+        shouldDirty: true,
+      });
+    });
+  };
+  const handleDefaultLocation = () => {};
+  const handleKeyDown = (e) => {
+    // Si presiona la tecla de borrar (Backspace) o Suprimir (Delete)
+    if (e.key === "Backspace" || e.key === "Delete") {
+      e.preventDefault(); // 🔥 Evita que borre letra por letra
+
+      // Ejecuta la función que limpia todos los campos del formulario
+    }
+  };
 
   // =========================
   // CARGAR DATOS EN EL FORM
@@ -96,12 +104,12 @@ export default function UserModal({
         password: "",
         rol: user.rol || "",
 
-        region: String(user.id_region || ""),
-        estado: String(user.id_estado || ""),
-        city: String(user.id_ciudad || ""),
-        sede: String(user.id_sede || ""),
-        piso: String(user.id_piso || ""),
-        ala: String(user.id_ala || ""),
+        region: user.id_region ? String(user.id_region) : "",
+        estado: user.id_estado ? String(user.id_estado) : "",
+        city: user.id_ciudad ? String(user.id_ciudad) : "",
+        sede: user.id_sede ? String(user.id_sede) : "",
+        piso: user.id_piso ? String(user.id_piso) : "",
+        ala: user.id_ala ? String(user.id_ala) : "",
       });
     }
   }, [user, type, reset]);
@@ -112,8 +120,6 @@ export default function UserModal({
   const onSubmitEdit = async (data) => {
     try {
       const payload = {
-        cedula_original: user.cedula,
-
         cedula: data.cedula,
         nombre: data.nombre,
         apellido: data.apellido,
@@ -133,13 +139,13 @@ export default function UserModal({
       };
 
       const response = await axios.put(
-        "http://localhost:3001/api/usuarios",
+        `http://localhost:3001/api/usuarios/${user.id_usuario}`,
         payload,
       );
 
       alert(response.data.message);
 
-      refreshUsers();
+      if (onUserUpdated) onUserUpdated();
       onClose();
     } catch (error) {
       console.error(error);
@@ -157,17 +163,29 @@ export default function UserModal({
   // =========================
   const handleDelete = async () => {
     try {
-      await axios.delete(`http://localhost:3001/api/usuarios/${user.cedula}`);
+      const response = await axios.put(
+        `http://localhost:3001/api/usuarios/eliminado/${user.id_usuario}`,
+      );
 
-      alert("Usuario eliminado correctamente");
+      alert(response.data.message);
 
-      refreshUsers();
+      if (onUserUpdated) onUserUpdated();
       onClose();
     } catch (error) {
       console.error(error);
-      alert("No se pudo eliminar el usuario");
+
+      if (error.response) {
+        alert(error.response.data.message);
+      } else {
+        alert("Error de conexión con el servidor");
+      }
     }
   };
+  const ubicacionTexto = user
+    ? `${user.sede || ""} - ${user.ciudad || ""} - Piso ${
+        user.piso || ""
+      }${user.alas ? ` - Ala ${user.alas}` : ""}`
+    : "";
   if (!isOpen || !user) return null;
 
   return (
@@ -296,12 +314,11 @@ export default function UserModal({
                   </p>
 
                   <p>
-                    <span className="font-bold">Piso:</span>{" "}
-                    {user.piso || "N/A"}
+                    <span className="font-bold">Piso:</span> {user.piso || " "}
                   </p>
 
                   <p>
-                    <span className="font-bold">Ala:</span> {user.ala || "N/A"}
+                    <span className="font-bold">Ala:</span> {user.alas || " "}
                   </p>
                 </div>
               </div>
@@ -311,7 +328,12 @@ export default function UserModal({
 
         {/* EDIT */}
         {type === "edit" && (
-          <form onSubmit={handleSubmit(onSubmitEdit)} className="p-8">
+          <form
+            onSubmit={handleSubmit(onSubmitEdit, (erroresValidacion) =>
+              console.log("Errores de Zod:", erroresValidacion),
+            )}
+            className="p-8"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {/* INPUTS */}
               <div>
@@ -429,7 +451,6 @@ export default function UserModal({
                   {...register("rol")}
                   className="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary-500"
                 >
-                  <option value="">Seleccione</option>
                   <option value="Superadministrador">Superadministrador</option>
                   <option value="Administrador">Administrador</option>
                   <option value="Visualizador">Visualizador</option>
@@ -438,116 +459,39 @@ export default function UserModal({
 
               {/* UBICACIONES */}
 
-              <div>
-                <label className="block text-sm font-bold mb-2">Región</label>
+              <div
+                className="col-span-1 pb-7
+                  [&>div>h3]:hidden [&>div]:p-0 [&>div]:bg-transparent
+                  [&>div]:border-0 [&>div]:shadow-none
+                  [&_label]:text-sm [&_label]:font-bold
+                  [&_label]:text-black [&_label]:mb-2 [&_label]:block
+                  [&_input]:w-full [&_input]:rounded-lg
+                  [&_input]:border-gray-300 [&_input]:shadow-sm
+                  [&_input]:py-2 [&_input]:px-3 [&_input]:text-sm
+                  [&_button]:hidden
+                  [&_.absolute]:z-50 [&_ul]:max-h-60
+                  [&_ul]:overflow-y-auto"
+              >
+                <LocationSelector
+                  title=""
+                  radioGroupName="usuario_ubicacion_default"
+                  formData={formValues}
+                  setFormData={handleSetFormData}
+                  onKeyDown={handleKeyDown}
+                  handleDefaultLocation={handleDefaultLocation}
+                  typePrefix=""
+                />
 
-                <select
-                  {...register("region")}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3"
-                  onChange={(e) => {
-                    setValue("region", e.target.value);
-
-                    setValue("estado", "");
-                    setValue("city", "");
-                    setValue("sede", "");
-
-                    setEstadoList([]);
-                    setCiudadesList([]);
-                  }}
-                >
-                  <option value="">Seleccione</option>
-
-                  {regionList.map((r) => (
-                    <option key={r.id_region} value={r.id_region}>
-                      {r.region}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold mb-2">Estado</label>
-
-                <select
-                  {...register("estado")}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3"
-                >
-                  <option value="">Seleccione</option>
-
-                  {estadoList.map((e) => (
-                    <option key={e.id_estado} value={e.id_estado}>
-                      {e.estados}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold mb-2">Ciudad</label>
-
-                <select
-                  {...register("city")}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3"
-                >
-                  <option value="">Seleccione</option>
-
-                  {ciudadesList.map((c) => (
-                    <option key={c.id_ciudad} value={c.id_ciudad}>
-                      {c.ciudad}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold mb-2">Sede</label>
-
-                <select
-                  {...register("sede")}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3"
-                >
-                  <option value="">Seleccione</option>
-
-                  {sedeList.map((s) => (
-                    <option key={s.id_sede} value={s.id_sede}>
-                      {s.sede}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold mb-2">Piso</label>
-
-                <select
-                  {...register("piso")}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3"
-                >
-                  <option value="">Seleccione</option>
-
-                  {pisoList.map((p) => (
-                    <option key={p.id_piso} value={p.id_piso}>
-                      {p.piso}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold mb-2">Ala</label>
-
-                <select
-                  {...register("ala")}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3"
-                >
-                  <option value="">Seleccione</option>
-
-                  {alaList.map((a) => (
-                    <option key={a.id_ala} value={a.id_ala}>
-                      {a.ala}
-                    </option>
-                  ))}
-                </select>
+                {/* Alerta de validación sin requerir el Ala */}
+                {(errors.region ||
+                  errors.estado ||
+                  errors.city ||
+                  errors.sede ||
+                  errors.piso) && (
+                  <p className="text-xs text-red-600 mt-1 font-medium">
+                    * Ubicación requerida.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -589,7 +533,7 @@ export default function UserModal({
                 <strong>
                   {user.nombre} {user.apellido}
                 </strong>{" "}
-                será eliminado permanentemente del sistema.
+                será eliminado del sistema.
               </p>
 
               <div className="flex gap-4 mt-8">

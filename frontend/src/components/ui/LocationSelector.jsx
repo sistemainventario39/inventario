@@ -1,326 +1,194 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 
 export default function LocationSelector({
-  title,
-  formData,
   setFormData,
-  handleDefaultLocation,
   typePrefix,
-  radioGroupName,
+  formData,
 }) {
-  const [regionesList, setRegionesList] = useState([]);
-  const [estadosList, setEstadosList] = useState([]);
-  const [ciudadesList, setCiudadesList] = useState([]);
-  const [sedeList, setSedeList] = useState([]);
-  const [pisoList, setPisoList] = useState([]);
-  const [alaList, setAlaList] = useState([]);
+  const [ubicaciones, setUbicaciones] = useState([]);
+  const [busqueda, setBusqueda] = useState("");
+  const [mostrarDropdown, setMostrarDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
-  const getFieldValue = (field) => formData[`${field}${typePrefix}`];
-
-  //constantes q obtendrán los valores de regiones y estado
-  const regionActual = getFieldValue("region");
-  const estadoActual = getFieldValue("estado");
-  const ciudadActual = getFieldValue("city");
-  const sedeActual = getFieldValue("sede");
-
-  //se obtiene las regiones
   useEffect(() => {
-    const obtenerRegiones = async () => {
+    const obtenerUbicaciones = async () => {
       try {
-        const response = await axios.get("http://localhost:3001/api/region");
-        setRegionesList(response.data);
+        const response = await axios.get(
+          "http://localhost:3001/api/ubicaciones",
+        );
+        setUbicaciones(response.data);
       } catch (error) {
-        console.error("Error obteniendo regiones:", error);
+        console.error("Error obteniendo ubicaciones:", error);
       }
     };
-    obtenerRegiones();
+    obtenerUbicaciones();
+  }, []);
+  useEffect(() => {
+    if (!ubicaciones.length) return;
+
+    const pfx = typePrefix || "";
+
+    const sedeId = formData?.[`sede${pfx}`];
+    const pisoId = formData?.[`piso${pfx}`];
+
+    if (!sedeId) return;
+
+    const ubicacionEncontrada = ubicaciones.find(
+      (u) =>
+        String(u.id_sede) === String(sedeId) &&
+        String(u.id_piso) === String(pisoId),
+    );
+
+    if (!ubicacionEncontrada) return;
+
+    const tieneAla =
+      ubicacionEncontrada.alas && ubicacionEncontrada.alas !== "NULL";
+
+    const textoAla = tieneAla ? `, Ala: ${ubicacionEncontrada.alas}` : "";
+
+    setBusqueda(
+      `${ubicacionEncontrada.sede} (${ubicacionEncontrada.ciudad}, Piso: ${ubicacionEncontrada.piso}${textoAla})`,
+    );
+  }, [ubicaciones, formData, typePrefix]);
+  // Cerrar el dropdown si el usuario hace clic fuera de él
+  useEffect(() => {
+    const handleClickFuera = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setMostrarDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickFuera);
+    return () => document.removeEventListener("mousedown", handleClickFuera);
   }, []);
 
-  //obtiene los estados
-  useEffect(() => {
-    const obtenerEstados = async () => {
-      if (!regionActual) {
-        setEstadosList([]);
-        return;
-      }
-      try {
-        const response = await axios.get(
-          `http://localhost:3001/api/region/${regionActual}/estados`,
-        );
-        setEstadosList(response.data);
-      } catch (error) {
-        console.error("Error obteniendo estados:", error);
-      }
-    };
-    obtenerEstados();
-  }, [regionActual]);
+  // Filtrar las ubicaciones en base a lo que escriba el usuario (busca por Sede o Ciudad)
+  const ubicacionesFiltradas = ubicaciones.filter((item) => {
+    const termino = busqueda.toLowerCase();
+    return (
+      item.sede.toLowerCase().includes(termino) ||
+      item.ciudad.toLowerCase().includes(termino)
+    );
+  });
 
-  //obtiene ciudades
-  useEffect(() => {
-    const obtenerCiudades = async () => {
-      if (!estadoActual) {
-        setCiudadesList([]);
-        return;
-      }
-      try {
-        const response = await axios.get(
-          `http://localhost:3001/api/estados/${estadoActual}/ciudades`,
-        );
-        setCiudadesList(response.data);
-      } catch (error) {
-        console.error("Error obteniendo ciudades:", error);
-      }
-    };
-    obtenerCiudades();
-  }, [estadoActual]);
+  // Al seleccionar una opción, guardamos TODOS los IDs y campos en el formData
+  const manejarSeleccion = (ubi) => {
+    const pfx = typePrefix || "";
 
-  //otbtiene sedes
-  useEffect(() => {
-    const obtenerSede = async () => {
-      if (!ciudadActual) {
-        setSedeList([]);
-        return;
-      }
-      try {
-        const response = await axios.get(
-          `http://localhost:3001/api/ciudades/${ciudadActual}/sede`,
-        );
-        setSedeList(response.data);
-      } catch (error) {
-        console.error("Error obteniendo sede:", error);
-      }
-    };
-    obtenerSede();
-  }, [ciudadActual]);
+    // Validamos que el ala exista y no sea un string "NULL" de la base de datos
+    const tieneAla = ubi.alas && ubi.alas !== "NULL" && ubi.alas !== null;
+    const textoAla = tieneAla ? `, Ala: ${ubi.alas}` : "";
 
-  //obtiene piso 21
-  useEffect(() => {
-    const obtenerPiso = async () => {
-      if (!sedeActual) {
-        setPisoList([]);
-        return;
-      }
-      try {
-        const response = await axios.get(
-          `http://localhost:3001/api/sede/${sedeActual}/piso`,
-        );
-        setPisoList(response.data);
-      } catch (error) {
-        console.error("Error obteniendo sede:", error);
-      }
-    };
-    obtenerPiso();
-  }, [sedeActual]);
-
-  //obtiene alas
-  useEffect(() => {
-    const obtenerAlas = async () => {
-      try {
-        const response = await axios.get("http://localhost:3001/api/ala");
-        setAlaList(response.data);
-      } catch (error) {
-        console.error("Error obteniendo alas:", error);
-      }
-    };
-    obtenerAlas();
-  }, []);
-
-  // Función auxiliar para actualizar campos específicos dinámicamente
-  const handleFieldChange = (field, value) => {
-    const fieldName = `${field}${typePrefix}`;
     setFormData((prev) => ({
       ...prev,
-      [fieldName]: value,
+      [`region${pfx}`]: ubi.id_region,
+      [`estado${pfx}`]: ubi.id_estado,
+      [`city${pfx}`]: ubi.id_ciudad,
+      [`sede${pfx}`]: ubi.id_sede,
+      [`piso${pfx}`]: ubi.id_piso,
+      // Guardamos el string del ala o vacío si no aplica
+      [`ala${pfx}`]: tieneAla ? ubi.alas : "",
+    }));
+
+    // Formateamos el texto que se verá reflejado en el input
+    setBusqueda(`${ubi.sede} (${ubi.ciudad}, Piso: ${ubi.piso}${textoAla})`);
+    setMostrarDropdown(false);
+  };
+  const limpiarUbicacion = () => {
+    setBusqueda("");
+
+    const pfx = typePrefix || "";
+
+    setFormData((prev) => ({
+      ...prev,
+      [`region${pfx}`]: "",
+      [`estado${pfx}`]: "",
+      [`city${pfx}`]: "",
+      [`sede${pfx}`]: "",
+      [`piso${pfx}`]: "",
+      [`ala${pfx}`]: "",
     }));
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-blue-50/40 p-4 rounded-xl border border-blue-100">
+    <div className="w-full bg-blue-50/40 p-4 rounded-xl border border-blue-100 flex flex-col gap-4">
       {/* Cabecera con botones por defecto */}
-      <div className="col-span-full flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h3 className="text-sm font-bold text-blue-800 uppercase">{title}</h3>
-        <div className="flex flex-wrap gap-2 md:gap-4 mt-2">
-          <label className="flex items-center space-x-2 cursor-pointer bg-white px-2 py-1 md:px-3 md:py-1.5 rounded-lg border border-blue-200 shadow-sm hover:bg-blue-50 transition-colors">
-            <input
-              type="radio"
-              name={radioGroupName}
-              className="w-4 h-4 text-primary-600 focus:ring-primary-500"
-              onChange={(e) =>
-                e.target.checked &&
-                handleDefaultLocation(typePrefix || "A", "torre30")
-              }
-            />
-            <span className="text-[10px] md:text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Torre 30 Default
-            </span>
-          </label>
 
-          <label className="flex items-center space-x-2 cursor-pointer bg-white px-2 py-1 md:px-3 md:py-1.5 rounded-lg border border-blue-200 shadow-sm hover:bg-blue-50 transition-colors">
-            <input
-              type="radio"
-              name={radioGroupName}
-              className="w-4 h-4 text-primary-600 focus:ring-primary-500"
-              onChange={(e) =>
-                e.target.checked &&
-                handleDefaultLocation(typePrefix || "A", "torreEste")
-              }
-            />
-            <span className="text-[10px] md:text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Torre Este Default
-            </span>
-          </label>
+      {/* Input Buscador / Autocomplete */}
+      <div className="relative w-full" ref={dropdownRef}>
+        <label className="block text-sm font-bold text-black mb-2">
+          Ubicación <span className="text-red-500">*</span>
+        </label>
 
-          <label className="flex items-center space-x-2 cursor-pointer bg-white px-2 py-1 md:px-3 md:py-1.5 rounded-lg border border-red-100 shadow-sm hover:bg-red-50 transition-colors">
-            <input
-              type="radio"
-              name={radioGroupName}
-              className="w-4 h-4 text-primary-600 focus:ring-primary-500"
-              onChange={(e) =>
-                e.target.checked &&
-                handleDefaultLocation(typePrefix || "A", "limpiar")
+        <div className="relative flex items-center">
+          <input
+            type="text"
+            className="w-full bg-white border border-gray-300 rounded-lg py-3 px-4 pr-10 outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-800 shadow-sm"
+            placeholder="Buscar por Sede o Ciudad..."
+            value={busqueda}
+            onChange={(e) => {
+              setBusqueda(e.target.value);
+              setMostrarDropdown(true);
+            }}
+            onFocus={() => setMostrarDropdown(true)}
+            onKeyDown={(e) => {
+              if (
+                (e.key === "Backspace" || e.key === "Delete") &&
+                busqueda.length > 0
+              ) {
+                limpiarUbicacion();
               }
-            />
-            <span className="text-[10px] md:text-xs font-semibold text-gray-700 whitespace-nowrap">
-              Limpiar
-            </span>
-          </label>
+            }}
+          />
+          {/* Icono de flecha */}
+          <div className="absolute right-3 pointer-events-none text-gray-500">
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
         </div>
-      </div>
 
-      {/* Selects de Ubicación */}
-      <div>
-        <label className="block text-sm font-bold text-black mb-2">
-          Region <span className="text-red-500">*</span>
-        </label>
-        <select
-          required
-          className="w-full border-gray-300 rounded-lg py-2 px-3 border outline-none bg-white focus:ring-2 focus:ring-primary-500"
-          value={getFieldValue("region") || ""}
-          onChange={(e) => {
-            handleFieldChange("region", e.target.value);
-            handleFieldChange("estado", ""); // Limpiamos el estado si cambian la región
-          }}
-        >
-          <option value="" disabled>
-            Seleccione Región
-          </option>
-          {regionesList.map((r) => (
-            <option key={r.id_region} value={r.id_region}>
-              {r.region}
-            </option>
-          ))}
-        </select>
-      </div>
+        {/* Dropdown de opciones filtradas */}
+        {mostrarDropdown && (
+          <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto divide-y divide-gray-100">
+            {ubicacionesFiltradas.length > 0 ? (
+              ubicacionesFiltradas.map((ubi, index) => {
+                // Validación exacta de la nueva columna plural 'alas' de tu BD
+                const tieneAla =
+                  ubi.alas && ubi.alas !== "NULL" && ubi.alas !== null;
+                const textoAla = tieneAla ? `, Ala: ${ubi.alas}` : "";
 
-      <div title={!regionActual ? "Debe seleccionar una región" : ""}>
-        <label className="block text-sm font-bold text-black mb-2">
-          Estado <span className="text-red-500">*</span>
-        </label>
-        <select
-          required
-          className="w-full bg-white border-gray-300 rounded-lg py-2 px-3 border outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-          value={getFieldValue("estado") || ""}
-          onChange={(e) => {
-            handleFieldChange("estado", e.target.value);
-            handleFieldChange("city", "");
-          }}
-          disabled={!regionActual || estadosList.length === 0}
-        >
-          <option value="" disabled>
-            Seleccione Estado
-          </option>
-          {estadosList.map((est) => (
-            <option key={est.id_estado} value={est.id_estado}>
-              {est.estados}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div title={!estadoActual ? "Debe seleccionar una estado" : ""}>
-        <label className="block text-sm font-bold text-black mb-2">
-          Ciudad <span className="text-red-500">*</span>
-        </label>
-        <select
-          required
-          className="w-full border-gray-300 rounded-lg py-2 px-3 border outline-none bg-white focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-          value={getFieldValue("city") || ""}
-          onChange={(e) => handleFieldChange("city", e.target.value)}
-          disabled={!estadoActual || ciudadesList.length === 0} // Se bloquea si no hay estado
-        >
-          <option value="" disabled>
-            Seleccione Ciudad
-          </option>
-          {/* Mapeo dinámico de los estados desde la BD */}
-          {ciudadesList.map((cd) => (
-            <option key={cd.id_ciudad} value={cd.id_ciudad}>
-              {cd.ciudad}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div title={!ciudadActual ? "Debe seleccionar una ciudad" : ""}>
-        <label className="block text-sm font-bold text-black mb-2">
-          Sede / Torre <span className="text-red-500">*</span>
-        </label>
-        <select
-          required
-          className="w-full bg-white border-gray-300 rounded-lg py-2 px-3 border outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-          value={getFieldValue("sede") || ""}
-          onChange={(e) => handleFieldChange("sede", e.target.value)}
-          disabled={!ciudadActual || sedeList.length === 0}
-        >
-          <option value="" disabled>
-            Seleccione Torre
-          </option>
-          {sedeList.map((cd) => (
-            <option key={cd.id_sede} value={cd.id_sede}>
-              {cd.sede}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div title={!sedeActual ? "Debe seleccionar una sede" : ""}>
-        <label className="block text-sm font-bold text-black mb-2">
-          Piso <span className="text-red-500">*</span>
-        </label>
-        <select
-          required
-          className="w-full bg-white border-gray-300 rounded-lg py-2 px-3 border outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-          value={getFieldValue("piso") || ""}
-          onChange={(e) => handleFieldChange("piso", e.target.value)}
-          disabled={!sedeActual || pisoList.length === 0}
-        >
-          <option value="" disabled>
-            Seleccione Piso
-          </option>
-          {pisoList.map((cd) => (
-            <option key={cd.id_piso} value={cd.id_piso}>
-              {cd.piso}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-sm font-bold text-black mb-2">
-          Ala <span className="text-red-500">*</span>
-        </label>
-        <select
-          className="w-full bg-white border-gray-300 rounded-lg py-2 px-3 border outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-          value={getFieldValue("ala") || ""}
-          onChange={(e) => handleFieldChange("ala", e.target.value)}
-          disabled={alaList.length === 0}
-        >
-          {alaList.map((cd) => (
-            <option key={cd.id_ala} value={cd.id_ala}>
-              {cd.ala}
-            </option>
-          ))}
-        </select>
+                return (
+                  <li
+                    key={index}
+                    className="px-4 py-3 hover:bg-blue-50 cursor-pointer text-sm text-gray-700 transition-colors"
+                    onClick={() => manejarSeleccion(ubi)}
+                  >
+                    <span className="font-bold text-blue-900">{ubi.sede}</span>{" "}
+                    <span className="text-gray-500">
+                      ({ubi.ciudad}, Piso: {ubi.piso}
+                      {textoAla})
+                    </span>
+                  </li>
+                );
+              })
+            ) : (
+              <li className="px-4 py-3 text-sm text-gray-500 italic">
+                No se encontraron ubicaciones
+              </li>
+            )}
+          </ul>
+        )}
       </div>
     </div>
   );

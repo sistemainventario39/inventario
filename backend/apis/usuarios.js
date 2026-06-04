@@ -11,7 +11,6 @@ Router.post("/usuarios", async (req, res) => {
     id_ciudad,
     id_sede,
     id_piso,
-    id_ala,
     username,
     password,
     rol,
@@ -32,15 +31,14 @@ Router.post("/usuarios", async (req, res) => {
     await connection.beginTransaction();
 
     const queryUbicacion = `
-      INSERT INTO ubicacion (id_region, id_estado, id_ciudad, id_sede, id_piso, id_ala) 
-      VALUES (?, ?, ?, ?, ?, ?)`;
+      INSERT INTO ubicacion (id_region, id_estado, id_ciudad, id_sede, id_piso) 
+      VALUES (?, ?, ?, ?, ?)`;
     const [ubi] = await connection.execute(queryUbicacion, [
       id_region,
       id_estado,
       id_ciudad,
       id_sede,
       id_piso,
-      id_ala || null,
     ]);
     //con el isertId recuperamos el id o clave primaria de la tabla ubicación
     const id_ubicacion = ubi.insertId;
@@ -87,58 +85,58 @@ Router.get("/usuarios", async (req, res) => {
 
   try {
     const query = `
-SELECT
-u.id_usuario,
+      SELECT
+      u.id_usuario,
 
-p.cedula,
-p.nombre,
-p.apellido,
-p.correo,
-p.telefono,
-p.estado AS estado_persona,
+      p.cedula,
+      p.nombre,
+      p.apellido,
+      p.correo,
+      p.telefono,
+      p.estado AS estado_persona,
 
-u.username,
-u.rol,
+      u.username,
+      u.rol,
 
-ub.id_region,
-ub.id_estado,
-ub.id_ciudad,
-ub.id_sede,
-ub.id_piso,
-ub.id_ala,
+      ub.id_region,
+      ub.id_estado,
+      ub.id_ciudad,
+      ub.id_sede,
+      ub.id_piso,
 
-r.region,
-e.estados AS estado,
-c.ciudad,
-s.sede,
-pi.piso,
-a.ala
 
-FROM personas p
+      r.region,
+      e.estado,
+      c.ciudad,
+      s.sede,
+      pi.piso,
+      pi.alas
 
-INNER JOIN usuarios u
-ON p.id_usuario = u.id_usuario
+      FROM personas p
 
-INNER JOIN ubicacion ub
-ON p.id_ubicacion = ub.id_ubicacion
+      INNER JOIN usuarios u
+      ON p.id_usuario = u.id_usuario
 
-LEFT JOIN region r
-ON ub.id_region = r.id_region
+      INNER JOIN ubicacion ub
+      ON p.id_ubicacion = ub.id_ubicacion
 
-LEFT JOIN estados e
-ON ub.id_estado = e.id_estado
+      LEFT JOIN region r
+      ON ub.id_region = r.id_region
 
-LEFT JOIN ciudades c
-ON ub.id_ciudad = c.id_ciudad
+      LEFT JOIN estados e
+      ON ub.id_estado = e.id_estado
 
-LEFT JOIN sede s
-ON ub.id_sede = s.id_sede
+      LEFT JOIN ciudades c
+      ON ub.id_ciudad = c.id_ciudad
 
-LEFT JOIN piso pi
-ON ub.id_piso = pi.id_piso
+      LEFT JOIN sede s
+      ON ub.id_sede = s.id_sede
 
-LEFT JOIN alas a
-ON ub.id_ala = a.id_ala
+      LEFT JOIN piso pi
+      ON ub.id_piso = pi.id_piso
+
+      WHERE p.estado = "activo";
+
     `;
     const [rows] = await connection.execute(query);
 
@@ -163,7 +161,6 @@ Router.put("/usuarios/:id", async (req, res) => {
     id_ciudad,
     id_sede,
     id_piso,
-    id_ala,
     username,
     rol,
     cedula,
@@ -171,7 +168,6 @@ Router.put("/usuarios/:id", async (req, res) => {
     apellido,
     correo,
     telefono,
-    estado_persona,
     password,
   } = req.body;
 
@@ -180,7 +176,6 @@ Router.put("/usuarios/:id", async (req, res) => {
   try {
     await connection.beginTransaction();
 
-    // Buscar datos actuales
     const [usuarioActual] = await connection.execute(
       `
       SELECT 
@@ -200,7 +195,6 @@ Router.put("/usuarios/:id", async (req, res) => {
 
     const { id_ubicacion } = usuarioActual[0];
 
-    // ACTUALIZAR UBICACION
     await connection.execute(
       `
       UPDATE ubicacion
@@ -209,14 +203,12 @@ Router.put("/usuarios/:id", async (req, res) => {
         id_estado = ?,
         id_ciudad = ?,
         id_sede = ?,
-        id_piso = ?,
-        id_ala = ?
+        id_piso = ?
       WHERE id_ubicacion = ?
       `,
-      [id_region, id_estado, id_ciudad, id_sede, id_piso, id_ala, id_ubicacion],
+      [id_region, id_estado, id_ciudad, id_sede, id_piso, id_ubicacion],
     );
 
-    // ACTUALIZAR USUARIO
     if (password && password.trim() !== "") {
       const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -244,7 +236,6 @@ Router.put("/usuarios/:id", async (req, res) => {
       );
     }
 
-    // ACTUALIZAR PERSONA
     await connection.execute(
       `
       UPDATE personas
@@ -257,13 +248,49 @@ Router.put("/usuarios/:id", async (req, res) => {
         estado = ?
       WHERE id_usuario = ?
       `,
-      [cedula, nombre, apellido, correo, telefono, estado_persona, id],
+      [cedula, nombre, apellido, correo, telefono, "activo", id],
     );
 
     await connection.commit();
 
     res.status(200).json({
       message: "Usuario actualizado correctamente",
+    });
+  } catch (e) {
+    await connection.rollback();
+
+    console.error("Error actualizando usuario:", e);
+
+    res.status(500).json({
+      message: "Error actualizando usuario",
+      error: e.message,
+    });
+  } finally {
+    connection.release();
+  }
+});
+
+Router.put("/usuarios/eliminado/:id", async (req, res) => {
+  const { id } = req.params;
+
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    await connection.execute(
+      `
+      UPDATE personas
+      SET estado = ?
+      WHERE id_usuario = ?
+      `,
+      ["inactivo", id],
+    );
+
+    await connection.commit();
+
+    res.status(200).json({
+      message: "Usuario eliminado (lógicamente)",
     });
   } catch (e) {
     await connection.rollback();

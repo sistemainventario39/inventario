@@ -40,23 +40,34 @@ export const userSchema = z.object({
     .min(1, "El nombre de usuario es requerido")
     .min(4, "El nombre de usuario debe tener al menos 4 caracteres"),
 
-  password: z
-    .string()
-    .min(1, "La contraseña es requerida")
-    .min(6, "La contraseña debe tener al menos 6 caracteres"),
+  password: z.string().refine((value) => value === "" || value.length >= 6, {
+    message: "La contraseña debe tener al menos 6 caracteres",
+  }),
 
   rol: z.enum(
-    ["Admin", "Superadmin", "Visualizador"],
+    ["Administrador", "Superadministrador", "Visualizador"],
     "debe seleccionar un rol",
   ),
-  region: z.string().min(1, "La region es requerida"),
-  city: z.string().min(1, "La ciudad es requerida"),
-  estado: z.string().min(1, "el estado es requerido"),
-  sede: z.string().min(1, "La sucursal es requerida"),
-
-  piso: z.string().min(1, "El piso es requerido"),
-
-  ala: z.string().min(1, "El ala es requerida"),
+  region: z.preprocess(
+    (val) => (val === null || val === undefined ? "" : String(val)),
+    z.string().min(1, "La región es requerida"),
+  ),
+  estado: z.preprocess(
+    (val) => (val === null || val === undefined ? "" : String(val)),
+    z.string().min(1, "El estado es requerido"),
+  ),
+  city: z.preprocess(
+    (val) => (val === null || val === undefined ? "" : String(val)),
+    z.string().min(1, "La ciudad es requerida"),
+  ),
+  sede: z.preprocess(
+    (val) => (val === null || val === undefined ? "" : String(val)),
+    z.string().min(1, "La sucursal es requerida"),
+  ),
+  piso: z.preprocess(
+    (val) => (val === null || val === undefined ? "" : String(val)),
+    z.string().min(1, "El piso es requerido"),
+  ),
 });
 
 export type UserFormData = z.infer<typeof userSchema>;
