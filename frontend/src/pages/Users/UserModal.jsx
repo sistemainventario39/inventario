@@ -15,6 +15,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import LocationSelector from "@/components/ui/LocationSelector";
 import { userSchema } from "../../validators/userSchema";
+import {toast} from "react-hot-toast";
 
 export default function UserModal({
   isOpen,
@@ -118,7 +119,7 @@ export default function UserModal({
   // EDITAR USUARIO
   // =========================
   const onSubmitEdit = async (data) => {
-    try {
+    
       const payload = {
         cedula: data.cedula,
         nombre: data.nombre,
@@ -138,48 +139,42 @@ export default function UserModal({
         id_ala: Number(data.ala),
       };
 
-      const response = await axios.put(
-        `http://localhost:3001/api/usuarios/${user.id_usuario}`,
-        payload,
-      );
+    const peticionEdicion = axios.put(
+      `http://localhost:3001/api/usuarios/${user.id_usuario}`,
+      payload,
+    );
 
-      alert(response.data.message);
-
-      if (onUserUpdated) onUserUpdated();
-      onClose();
-    } catch (error) {
-      console.error(error);
-
-      if (error.response) {
-        alert(error.response.data.message);
-      } else {
-        alert("Error de conexión con el servidor");
+    toast.promise(peticionEdicion, {
+      loading: "Editando usuario...",
+      success: (response) => {
+        if (onUserUpdated) onUserUpdated();
+        onClose();
+        return response.data.message || "Usuario editado con éxito";
+      },
+      error: (error) => {
+        return error.response?.data?.message || "Error al editar el usuario";
       }
-    }
+    });
   };
 
   // =========================
   // ELIMINAR
   // =========================
   const handleDelete = async () => {
-    try {
-      const response = await axios.put(
-        `http://localhost:3001/api/usuarios/eliminado/${user.id_usuario}`,
-      );
-
-      alert(response.data.message);
-
-      if (onUserUpdated) onUserUpdated();
-      onClose();
-    } catch (error) {
-      console.error(error);
-
-      if (error.response) {
-        alert(error.response.data.message);
-      } else {
-        alert("Error de conexión con el servidor");
+    const peticionEliminacion = axios.put(
+      `http://localhost:3001/api/usuarios/eliminado/${user.id_usuario}`,
+    );
+    toast.promise(peticionEliminacion, {
+      loading: "Eliminando usuario...",
+      success: (response) => {
+        if (onUserUpdated) onUserUpdated();
+        onClose();
+        return response.data.message || "Usuario eliminado con éxito";
+      },
+      error: (error) => {
+        return error.response?.data?.message || "Error al eliminar el usuario";
       }
-    }
+    });
   };
   const ubicacionTexto = user
     ? `${user.sede || ""} - ${user.ciudad || ""} - Piso ${

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { FiLock } from "react-icons/fi";
 import { CloseButton } from "../components/ui/button-close";
 import axios from "axios";
+import {toast} from "react-hot-toast";
 
 const API_URL = "http://localhost:3001/api";
 
@@ -42,35 +43,54 @@ export default function NuevaPassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setMessage("");
+    // setError("");
+    // setMessage("");
 
     if (password !== confirmPassword) {
-      setError("Las contraseñas no coinciden.");
+      toast.error("Las contraseñas no coinciden.");
       return;
     }
 
+
     if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres.");
+      toast.error("La contraseña debe tener al menos 6 caracteres.");
       return;
     }
 
     setLoading(true);
-    try {
-      const response = await axios.post(`${API_URL}/restablecer-password`, {
-        token,
-        password,
-      });
-      setMessage(response.data.message);
-      setTimeout(() => navigate("/login"), 2500);
-    } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "No se pudo actualizar la contraseña. Intenta de nuevo.",
-      );
-    } finally {
-      setLoading(false);
-    }
+
+    const peticionRestablecer = axios.post(`${API_URL}/restablecer-password`, { token, password });
+    // try {
+    //   const response = await axios.post(`${API_URL}/restablecer-password`, {
+    //     token,
+    //     password,
+    //   });
+    //   setMessage(response.data.message);
+    //   setTimeout(() => navigate("/login"), 2500);
+    // } catch (err) {
+    //   setError(
+    //     err.response?.data?.message ||
+    //       "No se pudo actualizar la contraseña. Intenta de nuevo.",
+    //   );
+    // } finally {
+    //   setLoading(false);
+    // }
+    toast.promise(peticionRestablecer, {
+      loading: "Actualizando contraseña...",
+      success: (response) => {
+        setLoading(false);
+        setPassword("");
+        setConfirmPassword("");
+        setTimeout(() => navigate("/login"), 2500);
+
+        return response.data.message || "Contraseña actualizada con éxito.";
+      },
+      error: (err) => {
+        setLoading(false);
+        return err.response?.data?.message ||
+          "No se pudo actualizar la contraseña. Intenta de nuevo.";
+      }
+    });
   };
 
   const handleClose = () => {
@@ -170,12 +190,12 @@ export default function NuevaPassword() {
                   </div>
                 </div>
 
-                {error && (
+                {/* {error && (
                   <p className="text-sm text-red-600 text-center">{error}</p>
                 )}
                 {message && (
                   <p className="text-sm text-green-600 text-center">{message}</p>
-                )}
+                )} */}
 
                 <button
                   type="submit"

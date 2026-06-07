@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiMail, FiLock, FiCpu } from "react-icons/fi";
+import {toast} from "react-hot-toast";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -8,9 +9,12 @@ export default function Login() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (formData.username && formData.password) {
-      navigate("/dashboard");
+    if (!formData.username || !formData.password) {
+      toast.error("Credenciales inválidas. Por favor completa los campos.");
+      return;
     }
+      toast.success("Inicio de sesión exitoso");
+      navigate("/dashboard");
   };
 
   return (

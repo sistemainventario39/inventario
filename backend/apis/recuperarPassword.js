@@ -9,7 +9,7 @@ const Router = express.Router();
 
 const TOKEN_EXPIRY_MS = 15 * 60 * 1000;
 const GENERIC_MESSAGE =
-  "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.";
+  "Enlace de recuperación enviado";
 
 Router.post("/recuperar-password", async (req, res) => {
   console.log("[recuperar-password] Solicitud recibida");

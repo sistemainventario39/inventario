@@ -11,6 +11,7 @@ import { equipoSchema } from "../validators/equipoSchema";
 import StatusToggle from "../components/ui/StatusToggle";
 import SerialSearchInput from "../components/ui/SerialSearchInput";
 import LocationSelector from "../components/ui/LocationSelector";
+import { toast } from "react-hot-toast";
 
 export default function Registro() {
   const navigate = useNavigate();
@@ -95,8 +96,18 @@ export default function Registro() {
     try {
       // 1. Validación de Zod
       equipoSchema.parse(formData);
+    } catch (error) {
+      if (error.errors) {
+        toast.error(`Revisa el formulario: ${error.errors[0].message}`);
+      } else {
+        console.error("Error del servidor:", error);
+        toast.error(
+          error.response?.data?.message || "Ocurrió un error al registrar.",
+        );
+      }
+    }
 
-      const tipoDispositivo = formData.type.toUpperCase();
+    const tipoDispositivo = formData.type.toUpperCase();
 
       // 2. Estructura Base para TODOS los equipos (PC, Laptop o Periféricos)
       const payload = {
@@ -206,21 +217,21 @@ export default function Registro() {
         const tipoClean = formData.type.toLowerCase();
         url = `http://localhost:3001/api/perifericos/${tipoClean}`;
       }
+      
+      const peticionRegistro = axios.post(url, payload);
 
-      // 5. Enviar Petición
-      const response = await axios.post(url, payload);
-      alert(response.data.message || "Equipo registrado exitosamente");
-      navigate("/busqueda"); // Opcional: redirigir o limpiar formulario
-    } catch (error) {
-      if (error.errors) {
-        alert(`Revisa el formulario: ${error.errors[0].message}`);
-      } else {
-        console.error("Error del servidor:", error);
-        alert(
-          error.response?.data?.message || "Ocurrió un error al registrar.",
-        );
-      }
-    }
+      toast.promise(peticionRegistro, {
+        loading: "Registrando equipo...",
+        success: (response) => {
+          setTimeout(() => {
+          navigate("/registro");
+          }, 3000); // Redirige después de 1 segundo para que el usuario vea el mensaje
+          return response.data.message || "Equipo registrado exitosamente.";
+        },
+        error: (err) => {
+          return err.response?.data?.message || "Error al registrar el equipo. Intenta nuevamente.";
+        },
+      }); 
   };
 
   // Función para autocompletar lol

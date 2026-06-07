@@ -14,6 +14,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { userSchema } from "../validators/userSchema";
 import UserModal from "./Users/UserModal";
+import {toast} from "react-hot-toast";
 
 // Importación del selector de ubicación
 import LocationSelector from "../components/ui/LocationSelector";
@@ -149,7 +150,7 @@ export default function RegistroUsuarios() {
   };
 
   const onSubmit = async (data) => {
-    try {
+    
       const payload = {
         id_region: Number(data.region) || null,
         id_estado: Number(data.estado) || null,
@@ -166,22 +167,23 @@ export default function RegistroUsuarios() {
         telefono: data.telefono,
         estado_persona: "activo",
       };
+      
+      const peticionRegistro = axios.post(
+      "http://localhost:3001/api/usuarios",
+      payload
+    );
 
-      const response = await axios.post(
-        "http://localhost:3001/api/usuarios",
-        payload,
-      );
-      alert(response.data.message || "Usuario registrado con éxito");
-      reset();
-      obtenerUsuarios();
-    } catch (error) {
-      console.error("Error al guardar en la base de datos:", error);
-      if (error.response) {
-        alert(`Error: ${error.response.data.message || "Error del servidor"}`);
-      } else {
-        alert("Ocurrió un error de red al intentar conectar con el servidor.");
+    toast.promise(peticionRegistro, {
+      loading: "Registrando usuario...",
+      success: (response) => {
+        reset();
+        obtenerUsuarios();
+        return response.data.message || "Usuario registrado con éxito";
+      },
+      error: (error) => {
+        return error.response?.data?.message || "Error al registrar el usuario";
       }
-    }
+    });
   };
 
   return (
@@ -385,16 +387,16 @@ export default function RegistroUsuarios() {
                   {/* UBICACIÓN: Sin título azul superior, alineado al eje horizontal y sin botón de limpiar */}
                   <div
                     className="col-span-1 pb-7
-  [&>div>h3]:hidden [&>div]:p-0 [&>div]:bg-transparent
-  [&>div]:border-0 [&>div]:shadow-none
-  [&_label]:text-sm [&_label]:font-bold
-  [&_label]:text-black [&_label]:mb-2 [&_label]:block
-  [&_input]:w-full [&_input]:rounded-lg
-  [&_input]:border-gray-300 [&_input]:shadow-sm
-  [&_input]:py-2 [&_input]:px-3 [&_input]:text-sm
-  [&_button]:hidden
-  [&_.absolute]:z-50 [&_ul]:max-h-60
-  [&_ul]:overflow-y-auto"
+                    [&>div>h3]:hidden [&>div]:p-0 [&>div]:bg-transparent
+                    [&>div]:border-0 [&>div]:shadow-none
+                    [&_label]:text-sm [&_label]:font-bold
+                    [&_label]:text-black [&_label]:mb-2 [&_label]:block
+                    [&_input]:w-full [&_input]:rounded-lg
+                    [&_input]:border-gray-300 [&_input]:shadow-sm
+                    [&_input]:py-2 [&_input]:px-3 [&_input]:text-sm
+                    [&_button]:hidden
+                    [&_.absolute]:z-50 [&_ul]:max-h-60
+                    [&_ul]:overflow-y-auto"
                   >
                     <LocationSelector
                       title=""
@@ -441,7 +443,6 @@ export default function RegistroUsuarios() {
           </section>
 
           {/* Tabla */}
-          {/* Tabla */}
           <section>
             <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
               <div className="px-4 sm:px-8 py-5 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
@@ -450,9 +451,6 @@ export default function RegistroUsuarios() {
                 </h2>
               </div>
 
-              {/* =========================================
-        VISTA MÓVIL (Intacta, como te gustó)
-    ========================================= */}
               <div className="block md:hidden divide-y divide-gray-200">
                 {users.map((u) => (
                   <div
@@ -558,10 +556,6 @@ export default function RegistroUsuarios() {
                 ))}
               </div>
 
-              {/* =========================================
-        VISTA ESCRITORIO
-    ========================================= */}
-              {/* ELIMINADO: overflow-x-auto. Ahora el contenedor permite que el menú flote libremente sin crear barras de scroll */}
               <div className="hidden md:block w-full rounded-b-2xl">
                 <table className="w-full divide-y divide-gray-200">
                   <thead className="bg-white">
@@ -636,7 +630,6 @@ export default function RegistroUsuarios() {
                           </button>
 
                           {activeDropdown === u.cedula && (
-                            /* AJUSTE: top-0 y right-12 posiciona el menú exactamente a la izquierda del botón de 3 puntos, en su misma fila */
                             <div className="absolute right-12 top-0 w-40 bg-white rounded-xl shadow-xl border border-gray-200 z-[9999]">
                               <button
                                 onClick={() => handleOpenModal("view", u)}

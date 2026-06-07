@@ -8,6 +8,7 @@ import Perfil from './pages/Perfil';
 import RegistroUsuarios from "./pages/RegistroUsuarios";
 import RecuperarPassword from "./pages/Recuperar-Password";
 import NuevaPassword from "./pages/NuevaPassword";
+import {Toaster} from "react-hot-toast"; 
 
 function App() {
   return (
@@ -23,7 +24,31 @@ function App() {
         <Route path="/recuperar-password" element={<RecuperarPassword />} />
         <Route path="/nueva-password" element={<NuevaPassword />} />
       </Routes>
+      <Toaster 
+        position="top-center"
+        toastOptions={{
+          className: 'text-sm font-semibold rounded-xl shadow-lg border border-gray-100',
+          style: {
+            background: '#ffffff',
+            color: '#1f2937', // Un gris oscuro elegante para el texto
+            padding: '12px 16px',
+          },
+          success: {
+            iconTheme: {
+              primary: '#059669', // Verde esmeralda para el éxito
+              secondary: '#ffffff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#EF4444', // Rojo para los errores
+              secondary: '#ffffff',
+            },
+          },
+        }}
+      />
     </Router>
+    
   );
 }
 
