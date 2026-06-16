@@ -1,5 +1,5 @@
 export default function esSuperAdmin(req, res, next) {
-  if (req.usuario.rol !== "Superadministrador") {
+  if (req.user.rol !== "Superadministrador") {
     return res
       .status(403)
       .json({ message: "Acceso denegado. Requiere ser Superadministrador." });

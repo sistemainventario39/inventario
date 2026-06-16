@@ -339,7 +339,6 @@ Router.put("/usuarios/eliminado/:id", async (req, res) => {
 
 Router.post("/login", async (req, res) => {
   const { correo, password } = req.body;
-
   try {
     const snapshot = await db
       .collection("usuarios")
@@ -353,6 +352,10 @@ Router.post("/login", async (req, res) => {
 
     const doc = snapshot.docs[0];
     const usuario = doc.data();
+
+    if (usuario.estado !== "activo") {
+      return res.status(403).json({ message: "Usuario se encuentra inactivo" });
+    }
     const match =
       password === usuario.password ||
       (await bcrypt.compare(password, usuario.password));

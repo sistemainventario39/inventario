@@ -127,7 +127,9 @@ export default function RegistroUsuarios() {
 
   const obtenerUsuarios = async () => {
     try {
-      const response = await axios.get("http://localhost:3001/api/usuarios");
+      const response = await axios.get("http://localhost:3001/api/usuarios", {
+        withCredentials: true,
+      });
       setUsers(response.data);
     } catch (error) {
       console.error("Error obteniendo usuarios:", error);
