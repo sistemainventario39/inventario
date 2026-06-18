@@ -15,6 +15,7 @@ export default function Bitacora() {
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
 
+  // Estados para la paginación
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -22,7 +23,7 @@ export default function Bitacora() {
     const fetchBitacora = async () => {
       try {
         const response = await axios.get("http://localhost:3001/api/bitacora", {
-          withCredentials: true, // Importante si tienes rutas protegidas
+          withCredentials: true,
         });
         setBitacora(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
@@ -35,7 +36,6 @@ export default function Bitacora() {
 
   // Filtrado reactivo
   const filteredData = bitacora.filter((item) => {
-    // Busca en el nombre de usuario o dentro del arreglo de detalles
     const matchesSearch =
       item.usuario?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.detalles?.some((detalle) =>
@@ -45,7 +45,6 @@ export default function Bitacora() {
     const matchesLocation =
       selectedLocation === "" || item.sede === selectedLocation;
 
-    // Filtro por rango de fechas (Ignora las horas para comparar días exactos)
     const itemDate = new Date(item.fecha);
     itemDate.setHours(0, 0, 0, 0);
 
@@ -58,19 +57,33 @@ export default function Bitacora() {
     return matchesSearch && matchesLocation && matchesDate;
   });
 
+  // Lógica de Paginación Exacta
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const currentItems = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  );
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
     <div className="min-h-screen bg-slate-50/50 text-slate-800 antialiased">
       <Header />
       <main className="max-w-7xl mx-auto px-4 py-10">
-        <h1 className="text-3xl font-extrabold text-slate-900 mb-8">
-          Bitácora de Actividades
-        </h1>
+        <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+              Bitácora de Actividades
+            </h1>
+            <p className="text-slate-500 text-sm mt-1.5 font-medium">
+              Historial y seguimiento de operaciones realizadas en el sistema.
+            </p>
+          </div>
+
+          <div className="self-start md:self-auto px-4 py-2 bg-blue-50 border border-blue-100 text-blue-700 rounded-xl text-xs font-semibold tracking-wide shadow-sm">
+            {filteredData.length}{" "}
+            {filteredData.length === 1
+              ? "registro encontrado"
+              : "registros encontrados"}
+          </div>
+        </div>
 
         {/* CONTENEDOR DE BÚSQUEDA Y FILTROS */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-8">
@@ -95,6 +108,7 @@ export default function Bitacora() {
               </label>
               <select
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+                value={selectedLocation}
                 onChange={(e) => {
                   setSelectedLocation(e.target.value);
                   setCurrentPage(1);
@@ -112,6 +126,7 @@ export default function Bitacora() {
               <input
                 type="date"
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+                value={fechaInicio}
                 onChange={(e) => {
                   setFechaInicio(e.target.value);
                   setCurrentPage(1);
@@ -125,6 +140,7 @@ export default function Bitacora() {
               <input
                 type="date"
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+                value={fechaFin}
                 onChange={(e) => {
                   setFechaFin(e.target.value);
                   setCurrentPage(1);
@@ -163,7 +179,7 @@ export default function Bitacora() {
                   currentItems.map((item) => (
                     <tr
                       key={item.id}
-                      className="hover:bg-slate-50 transition-colors"
+                      className="hover:bg-slate-50/50 transition-colors"
                     >
                       <td className="px-6 py-4 text-xs font-mono text-slate-500 truncate max-w-[100px]">
                         {item.id}
@@ -204,15 +220,64 @@ export default function Bitacora() {
                   <tr>
                     <td
                       colSpan="7"
-                      className="px-6 py-10 text-center text-slate-500"
+                      className="px-6 py-16 text-center text-slate-400"
                     >
-                      No se encontraron registros en la bitácora.
+                      <FiSliders className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                      <p className="text-sm font-semibold text-slate-700">
+                        Sin resultados
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        No se encontraron registros en la bitácora con los
+                        filtros seleccionados.
+                      </p>
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
+
+          {/* CONTROLES DE PAGINACIÓN */}
+          {filteredData.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 bg-slate-50/50 border-t border-slate-100">
+              <p className="text-sm text-slate-500 mb-4 sm:mb-0">
+                Mostrando{" "}
+                <span className="font-semibold text-slate-700">
+                  {indexOfFirstItem + 1}
+                </span>{" "}
+                a{" "}
+                <span className="font-semibold text-slate-700">
+                  {Math.min(indexOfLastItem, filteredData.length)}
+                </span>{" "}
+                de{" "}
+                <span className="font-semibold text-slate-700">
+                  {filteredData.length}
+                </span>{" "}
+                resultados
+              </p>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  <FiChevronLeft className="w-4 h-4" /> Anterior
+                </button>
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  Siguiente <FiChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>

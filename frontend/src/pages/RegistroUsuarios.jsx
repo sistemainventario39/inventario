@@ -8,6 +8,8 @@ import {
   FiEye,
   FiEdit,
   FiTrash2,
+  FiChevronLeft,
+  FiChevronRight,
 } from "react-icons/fi";
 
 import { useForm } from "react-hook-form";
@@ -71,6 +73,10 @@ export default function RegistroUsuarios() {
     user: null,
   });
 
+  // --- ESTADOS PARA LA PAGINACIÓN ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5; // Puedes cambiar este número para mostrar más o menos filas por página
+
   const formValues = watch();
 
   // Sincroniza los cambios del componente LocationSelector con react-hook-form
@@ -79,10 +85,7 @@ export default function RegistroUsuarios() {
       typeof updater === "function" ? updater(formValues) : updater;
 
     Object.entries(nextValues).forEach(([key, value]) => {
-      // Obtenemos el valor que tiene actualmente el formulario
       const currentValue = getValues(key);
-
-      // Solo obligamos a validar si el nuevo valor es diferente al actual
       const cambioElValor = currentValue !== value;
 
       setValue(key, value, {
@@ -92,14 +95,12 @@ export default function RegistroUsuarios() {
     });
   };
 
-  //Función para borrar rapidamente la sede en ubicación.
   const handleKeyDown = (e) => {
     if (e.key === "Backspace" || e.key === "Delete") {
       e.preventDefault();
     }
   };
 
-  // Limpia manualmente los errores visuales de ubicación al seleccionar un piso
   useEffect(() => {
     if (formValues.piso) {
       clearErrors(["region", "estado", "city", "sede", "piso"]);
@@ -131,6 +132,7 @@ export default function RegistroUsuarios() {
         withCredentials: true,
       });
       setUsers(response.data);
+      setCurrentPage(1); // Reiniciar a la primera página al refrescar los datos
     } catch (error) {
       console.error("Error obteniendo usuarios:", error);
     }
@@ -139,6 +141,19 @@ export default function RegistroUsuarios() {
   useEffect(() => {
     obtenerUsuarios();
   }, []);
+
+  // --- LÓGICA DE PAGINACIÓN ---
+  const totalPages = Math.ceil(users.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
+  // Array recortado con los usuarios que corresponden a la página actual
+  const currentUsers = users.slice(indexOfFirstItem, indexOfLastItem);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    setActiveDropdown(null); // Cerrar cualquier menú de acciones abierto al cambiar de página
+  };
 
   const getFieldProps = (name) => {
     const state = getFieldState(name);
@@ -168,7 +183,6 @@ export default function RegistroUsuarios() {
       telefono: data.telefono,
       estado_persona: "activo",
     };
-    console.log(payload);
 
     const peticionRegistro = axios.post(
       "http://localhost:3001/api/usuarios",
@@ -346,7 +360,7 @@ export default function RegistroUsuarios() {
                     )}
                   </div>
 
-                  {/* FILA 3: Totalmente nivelada en la misma línea */}
+                  {/* FILA 3 */}
                   <div>
                     <label className="block text-sm font-bold text-black mb-2">
                       Correo Electrónico <span className="text-red-500">*</span>
@@ -386,7 +400,7 @@ export default function RegistroUsuarios() {
                     )}
                   </div>
 
-                  {/* UBICACIÓN: Sin título azul superior, alineado al eje horizontal y sin botón de limpiar */}
+                  {/* UBICACIÓN */}
                   <div
                     className="col-span-1 pb-7
                     [&>div>h3]:hidden [&>div]:p-0 [&>div]:bg-transparent
@@ -410,7 +424,6 @@ export default function RegistroUsuarios() {
                       typePrefix=""
                     />
 
-                    {/* Alerta de validación sin requerir el Ala */}
                     {(errors.region ||
                       errors.estado ||
                       errors.city ||
@@ -453,8 +466,9 @@ export default function RegistroUsuarios() {
                 </h2>
               </div>
 
+              {/* Vista Móvil (Tarjetas) - Ahora usa currentUsers */}
               <div className="block md:hidden divide-y divide-gray-200">
-                {users.map((u) => (
+                {currentUsers.map((u) => (
                   <div
                     key={u.cedula}
                     className="p-4 bg-white flex flex-col gap-3 relative"
@@ -558,7 +572,8 @@ export default function RegistroUsuarios() {
                 ))}
               </div>
 
-              <div className="hidden md:block w-full rounded-b-2xl">
+              {/* Vista Escritorio (Tabla) - Ahora usa currentUsers */}
+              <div className="hidden md:block w-full">
                 <table className="w-full divide-y divide-gray-200">
                   <thead className="bg-white">
                     <tr>
@@ -586,7 +601,7 @@ export default function RegistroUsuarios() {
                   </thead>
 
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {users.map((u) => (
+                    {currentUsers.map((u) => (
                       <tr
                         key={u.cedula}
                         className="hover:bg-gray-50 transition-colors"
@@ -664,6 +679,86 @@ export default function RegistroUsuarios() {
               {users.length === 0 && (
                 <div className="px-6 py-12 text-center text-gray-500 text-sm">
                   No hay usuarios registrados todavía.
+                </div>
+              )}
+
+              {/* --- COMPONENTE INTERFAZ DE PAGINACIÓN --- */}
+              {users.length > 0 && (
+                <div className="px-4 py-4 sm:px-6 flex items-center justify-between border-t border-gray-200 bg-white rounded-b-2xl">
+                  {/* Info izquierda */}
+                  <div className="flex-1 flex justify-between sm:hidden">
+                    <button
+                      onClick={() =>
+                        handlePageChange(Math.max(currentPage - 1, 1))
+                      }
+                      disabled={currentPage === 1}
+                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Anterior
+                    </button>
+                    <button
+                      onClick={() =>
+                        handlePageChange(Math.min(currentPage + 1, totalPages))
+                      }
+                      disabled={currentPage === totalPages}
+                      className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm text-gray-700">
+                        Mostrando{" "}
+                        <span className="font-semibold">
+                          {indexOfFirstItem + 1}
+                        </span>{" "}
+                        al{" "}
+                        <span className="font-semibold">
+                          {Math.min(indexOfLastItem, users.length)}
+                        </span>{" "}
+                        de <span className="font-semibold">{users.length}</span>{" "}
+                        resultados
+                      </p>
+                    </div>
+                    <div>
+                      <nav
+                        className="relative z-0 inline-flex rounded-xl shadow-sm gap-1"
+                        aria-label="Pagination"
+                      >
+                        <button
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          disabled={currentPage === 1}
+                          className="relative inline-flex items-center px-2 py-2 rounded-l-xl border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-40 transition-colors"
+                        >
+                          <FiChevronLeft className="h-5 w-5" />
+                        </button>
+
+                        {/* Generación dinámica de botones de página */}
+                        {Array.from({ length: totalPages }, (_, index) => (
+                          <button
+                            key={index + 1}
+                            onClick={() => handlePageChange(index + 1)}
+                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-bold rounded-xl transition-all duration-150 ${
+                              currentPage === index + 1
+                                ? "z-10 bg-primary-600 border-primary-600 text-white shadow-sm"
+                                : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                            }`}
+                          >
+                            {index + 1}
+                          </button>
+                        ))}
+
+                        <button
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                          className="relative inline-flex items-center px-2 py-2 rounded-r-xl border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-40 transition-colors"
+                        >
+                          <FiChevronRight className="h-5 w-5" />
+                        </button>
+                      </nav>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
