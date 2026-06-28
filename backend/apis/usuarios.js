@@ -276,7 +276,7 @@ Router.put("/usuarios/:id", verificarToken, async (req, res) => {
 });
 
 /* =========================
-   PUT: ELIMINACIÓN LÓGICA
+  PUT: ELIMINACIÓN LÓGICA
 ========================= */
 Router.put("/usuarios/eliminado/:id", verificarToken, async (req, res) => {
   try {

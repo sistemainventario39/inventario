@@ -12,6 +12,8 @@ import {
   FiTrash2,
   FiChevronLeft,
   FiChevronRight,
+  FiChevronDown,
+  FiChevronUp
 } from "react-icons/fi";
 import { EqualIcon } from "lucide-react";
 
@@ -36,6 +38,9 @@ export default function Busqueda() {
     action: null, // "view", "edit", "delete"
     itemData: null, // Datos limpios con su ID y categoría
   });
+
+  // NUEVO: Estado para mostrar u ocultar los filtros
+  const [showFilters, setShowFilters] = useState(false);
 
   // Función adaptada para buscar por ID y tabla específica
   const handleOpenModal = (action, item) => {
@@ -209,154 +214,178 @@ export default function Busqueda() {
 
         {/* CONTENEDOR DE BÚSQUEDA Y FILTROS */}
         <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-sm p-6 mb-8 transition-all duration-300 hover:shadow-md">
-          <div className="relative mb-8">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <FiSearch className="h-5 w-5 text-slate-400" />
+          
+          {/* Fila del buscador y botón de filtros */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-2">
+            <div className="relative flex-grow">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <FiSearch className="h-5 w-5 text-slate-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Escribe el nombre de un equipo o su número de serie..."
+                className="pl-12 block w-full bg-slate-50/50 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl shadow-inner py-3 px-4 sm:text-sm border transition-all placeholder:text-slate-400 font-medium"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-            <input
-              type="text"
-              placeholder="Escribe el nombre de un equipo o su número de serie..."
-              className="pl-12 block w-full bg-slate-50/50 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl shadow-inner py-3 px-4 sm:text-sm border transition-all placeholder:text-slate-400 font-medium"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+
+            {/* NUEVO: Botón para alternar filtros */}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center justify-center gap-2 px-5 py-3 border rounded-xl font-medium transition-all duration-200 sm:w-auto w-full ${
+                showFilters 
+                  ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm" 
+                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm"
+              }`}
+            >
+              <FiSliders className="w-4 h-4" />
+              Filtros
+              {showFilters ? <FiChevronUp className="w-4 h-4 ml-1" /> : <FiChevronDown className="w-4 h-4 ml-1" />}
+            </button>
           </div>
 
-          {/* Filtros */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 pt-6 border-t border-slate-100">
-            {/* Estado */}
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2 text-slate-400">
-                <span className="text-xs font-bold tracking-wider uppercase">
-                  Estado
-                </span>
+          {/* NUEVO: Contenedor colapsable de Filtros (El "Acordeón") */}
+          <div 
+            className={`transition-all duration-500 ease-in-out overflow-hidden ${
+              showFilters ? "max-h-[1200px] opacity-100 pt-6 mt-4 border-t border-slate-100" : "max-h-0 opacity-0 pt-0 mt-0 border-transparent"
+            }`}
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {/* Estado */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 text-slate-400">
+                  <span className="text-xs font-bold tracking-wider uppercase">
+                    Estado
+                  </span>
+                </div>
+                <div className="space-y-2.5">
+                  {options.statuses.map((status) => {
+                    const isChecked = selectedStatuses.includes(status);
+                    return (
+                      <label
+                        key={status}
+                        className={`flex items-center space-x-3 px-3 py-2 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer select-none ${isChecked ? "bg-blue-50/60 border-blue-200 text-blue-700 shadow-sm" : "bg-transparent border-slate-100 text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-200"}`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="rounded-md border-slate-300 text-blue-600 focus:ring-blue-500/30 h-4 w-4 transition-all"
+                          checked={isChecked}
+                          onChange={() =>
+                            handleCheckboxChange(
+                              status,
+                              selectedStatuses,
+                              setSelectedStatuses,
+                            )
+                          }
+                        />
+                        <span>{status}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="space-y-2.5">
-                {options.statuses.map((status) => {
-                  const isChecked = selectedStatuses.includes(status);
-                  return (
-                    <label
-                      key={status}
-                      className={`flex items-center space-x-3 px-3 py-2 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer select-none ${isChecked ? "bg-blue-50/60 border-blue-200 text-blue-700 shadow-sm" : "bg-transparent border-slate-100 text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-200"}`}
-                    >
-                      <input
-                        type="checkbox"
-                        className="rounded-md border-slate-300 text-blue-600 focus:ring-blue-500/30 h-4 w-4 transition-all"
-                        checked={isChecked}
-                        onChange={() =>
-                          handleCheckboxChange(
-                            status,
-                            selectedStatuses,
-                            setSelectedStatuses,
-                          )
-                        }
-                      />
-                      <span>{status}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
 
-            {/* Componente */}
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2 text-slate-400">
-                <span className="text-xs font-bold tracking-wider uppercase">
-                  Componente
-                </span>
+              {/* Componente */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 text-slate-400">
+                  <span className="text-xs font-bold tracking-wider uppercase">
+                    Componente
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {options.types.map((type) => {
+                    const isChecked = selectedTypes.includes(type);
+                    return (
+                      <label
+                        key={type}
+                        className={`flex items-center space-x-2 px-2.5 py-2 rounded-xl border text-xs font-medium transition-all duration-200 cursor-pointer select-none ${isChecked ? "bg-blue-50/60 border-blue-200 text-blue-700 shadow-sm" : "bg-transparent border-slate-100 text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-200"}`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/30 h-3.5 w-3.5 transition-all"
+                          checked={isChecked}
+                          onChange={() =>
+                            handleCheckboxChange(
+                              type,
+                              selectedTypes,
+                              setSelectedTypes,
+                            )
+                          }
+                        />
+                        <span className="truncate">{type}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                {options.types.map((type) => {
-                  const isChecked = selectedTypes.includes(type);
-                  return (
-                    <label
-                      key={type}
-                      className={`flex items-center space-x-2 px-2.5 py-2 rounded-xl border text-xs font-medium transition-all duration-200 cursor-pointer select-none ${isChecked ? "bg-blue-50/60 border-blue-200 text-blue-700 shadow-sm" : "bg-transparent border-slate-100 text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-200"}`}
-                    >
-                      <input
-                        type="checkbox"
-                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/30 h-3.5 w-3.5 transition-all"
-                        checked={isChecked}
-                        onChange={() =>
-                          handleCheckboxChange(
-                            type,
-                            selectedTypes,
-                            setSelectedTypes,
-                          )
-                        }
-                      />
-                      <span className="truncate">{type}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
 
-            {/* Modelo */}
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2 text-slate-400">
-                <span className="text-xs font-bold tracking-wider uppercase">
-                  Modelo
-                </span>
+              {/* Modelo */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 text-slate-400">
+                  <span className="text-xs font-bold tracking-wider uppercase">
+                    Modelo
+                  </span>
+                </div>
+                <div className="space-y-2.5">
+                  {options.models.map((model) => {
+                    const isChecked = selectedModels.includes(model);
+                    return (
+                      <label
+                        key={model}
+                        className={`flex items-center space-x-3 px-3 py-2 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer select-none ${isChecked ? "bg-blue-50/60 border-blue-200 text-blue-700 shadow-sm" : "bg-transparent border-slate-100 text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-200"}`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="rounded-md border-slate-300 text-blue-600 focus:ring-blue-500/30 h-4 w-4 transition-all"
+                          checked={isChecked}
+                          onChange={() =>
+                            handleCheckboxChange(
+                              model,
+                              selectedModels,
+                              setSelectedModels,
+                            )
+                          }
+                        />
+                        <span>{model}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="space-y-2.5">
-                {options.models.map((model) => {
-                  const isChecked = selectedModels.includes(model);
-                  return (
-                    <label
-                      key={model}
-                      className={`flex items-center space-x-3 px-3 py-2 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer select-none ${isChecked ? "bg-blue-50/60 border-blue-200 text-blue-700 shadow-sm" : "bg-transparent border-slate-100 text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-200"}`}
-                    >
-                      <input
-                        type="checkbox"
-                        className="rounded-md border-slate-300 text-blue-600 focus:ring-blue-500/30 h-4 w-4 transition-all"
-                        checked={isChecked}
-                        onChange={() =>
-                          handleCheckboxChange(
-                            model,
-                            selectedModels,
-                            setSelectedModels,
-                          )
-                        }
-                      />
-                      <span>{model}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
 
-            {/* Torre */}
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2 text-slate-400">
-                <span className="text-xs font-bold tracking-wider uppercase">
-                  Torre Ubicación
-                </span>
-              </div>
-              <div className="space-y-2.5">
-                {options.locations.map((loc) => {
-                  const isChecked = selectedLocations.includes(loc);
-                  return (
-                    <label
-                      key={loc}
-                      className={`flex items-center space-x-3 px-3 py-2 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer select-none ${isChecked ? "bg-blue-50/60 border-blue-200 text-blue-700 shadow-sm" : "bg-transparent border-slate-100 text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-200"}`}
-                    >
-                      <input
-                        type="checkbox"
-                        className="rounded-md border-slate-300 text-blue-600 focus:ring-blue-500/30 h-4 w-4 transition-all"
-                        checked={isChecked}
-                        onChange={() =>
-                          handleCheckboxChange(
-                            loc,
-                            selectedLocations,
-                            setSelectedLocations,
-                          )
-                        }
-                      />
-                      <span>{loc}</span>
-                    </label>
-                  );
-                })}
+              {/* Torre */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 text-slate-400">
+                  <span className="text-xs font-bold tracking-wider uppercase">
+                    Torre Ubicación
+                  </span>
+                </div>
+                <div className="space-y-2.5">
+                  {options.locations.map((loc) => {
+                    const isChecked = selectedLocations.includes(loc);
+                    return (
+                      <label
+                        key={loc}
+                        className={`flex items-center space-x-3 px-3 py-2 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer select-none ${isChecked ? "bg-blue-50/60 border-blue-200 text-blue-700 shadow-sm" : "bg-transparent border-slate-100 text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-200"}`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="rounded-md border-slate-300 text-blue-600 focus:ring-blue-500/30 h-4 w-4 transition-all"
+                          checked={isChecked}
+                          onChange={() =>
+                            handleCheckboxChange(
+                              loc,
+                              selectedLocations,
+                              setSelectedLocations,
+                            )
+                          }
+                        />
+                        <span>{loc}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>

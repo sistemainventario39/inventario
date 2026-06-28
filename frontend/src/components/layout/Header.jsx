@@ -85,6 +85,9 @@ export default function Header() {
                   Gestión de Usuarios
                 </NavLink>
               )}
+              <NavLink to="/ubicacion" className={getNavClass}>
+                Ubicación
+              </NavLink>
               <NavLink to="/bitacora" className={getNavClass}>
                 Bitácora
               </NavLink>
@@ -155,7 +158,7 @@ export default function Header() {
         <div
           className={
             "md:hidden overflow-hidden transition-[max-height] duration-300 " +
-            (mobileOpen ? "max-h-72" : "max-h-0")
+            (mobileOpen ? "max-h-96" : "max-h-0")
           }
         >
           <nav className="pb-4 pt-2 flex flex-col gap-1">
@@ -164,6 +167,8 @@ export default function Header() {
               { to: "/busqueda", label: "Búsqueda" },
               { to: "/registro", label: "Registro de Equipo" },
               { to: "/registro-usuarios", label: "Registro de Usuarios" },
+              { to: "/ubicacion", label: "Ubicación" },
+              { to: "/bitacora", label: "Bitácora" },
             ].map((item) => (
               <NavLink
                 key={item.to}

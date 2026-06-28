@@ -4,7 +4,10 @@ import {
   normalize,
   sha1,
 } from "../utils/inventory.helpers.js";
-import { PERIFERICOS_MAP } from "../utils/inventory.constants.js";
+import {
+  PERIFERICOS_MAP,
+  locationRequiredFields,
+} from "../utils/inventory.constants.js";
 
 export function normalizeLocationInput(input, label) {
   if (!input || typeof input !== "object") {

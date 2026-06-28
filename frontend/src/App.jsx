@@ -15,6 +15,7 @@ import RegistroUsuarios from "./pages/RegistroUsuarios";
 import RecuperarPassword from "./pages/Recuperar-Password";
 import NuevaPassword from "./pages/NuevaPassword";
 import Bitacora from "./pages/Bitacora";
+import Ubicacion from "./pages/Ubicacion/Ubicacion";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "../src/controllers/AuthContext";
 
@@ -54,6 +55,7 @@ function App() {
             <Route path="/registro-usuarios" element={<RegistroUsuarios />} />
             <Route path="/perfil" element={<Perfil />} />
             <Route path="/bitacora" element={<Bitacora />} />
+            <Route path="/ubicacion" element={<Ubicacion />} />
           </Route>
         </Routes>
 
