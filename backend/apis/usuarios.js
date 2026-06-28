@@ -9,62 +9,25 @@ import { generarCambios } from "../controller/generarCambios.js";
 import verificarToken from "../middleware/verificarToken.js";
 import esSuperAdmin from "../middleware/esSuperAdmin.js";
 import permitirEscritura from "../middleware/permitirEscritura.js";
+
+import {
+  normalize,
+  sha1,
+  badRequest,
+  requireString,
+} from "../utils/inventory.helpers.js";
+
+import { locationRequiredFields } from "../utils/inventory.constants.js";
+
+import {
+  normalizeLocationInput,
+  locationIdFromData,
+} from "../utils/inventory.validators.js";
+
 const Router = express.Router();
 dotenv.config();
 const COL_USUARIOS = "usuarios";
 const COL_UBICACIONES = "ubicaciones";
-
-const normalize = (value = "") =>
-  String(value)
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-
-const sha1 = (value) =>
-  crypto.createHash("sha1").update(String(value)).digest("hex");
-
-const locationRequiredFields = ["region", "estado", "ciudad", "sede", "piso"];
-
-function badRequest(message) {
-  const err = new Error(message);
-  err.statusCode = 400;
-  return err;
-}
-
-function requireString(value, fieldName) {
-  if (typeof value !== "string" || !value.trim()) {
-    throw badRequest(`El campo "${fieldName}" es obligatorio.`);
-  }
-  return value.trim();
-}
-
-function normalizeLocationInput(input, label) {
-  if (!input || typeof input !== "object") {
-    throw badRequest(`La ubicación de ${label} es obligatoria.`);
-  }
-
-  const data = {};
-  for (const field of locationRequiredFields) {
-    data[field] = requireString(input[field], `${label}.${field}`);
-  }
-
-  data.ala = input.alas ? String(input.alas).trim() : null; // Nota: en usuarios le llamabas "alas"
-  return data;
-}
-
-function locationIdFromData(data) {
-  const raw = [
-    normalize(data.region),
-    normalize(data.estado),
-    normalize(data.ciudad),
-    normalize(data.sede),
-    normalize(data.piso),
-    normalize(data.ala || ""),
-  ].join("|");
-
-  return `ubi_${sha1(raw)}`;
-}
 
 Router.post("/usuarios", async (req, res) => {
   try {
@@ -303,7 +266,7 @@ Router.put("/usuarios/:id", verificarToken, async (req, res) => {
     });
 
     res.status(200).json({
-      message: "Usuario actualizado exitosamente.",
+      message: "Usuario actualizado y cambios registrados en bitácora.",
     });
   } catch (e) {
     res
@@ -315,18 +278,38 @@ Router.put("/usuarios/:id", verificarToken, async (req, res) => {
 /* =========================
    PUT: ELIMINACIÓN LÓGICA
 ========================= */
-Router.put("/usuarios/eliminado/:id", async (req, res) => {
+Router.put("/usuarios/eliminado/:id", verificarToken, async (req, res) => {
   try {
     const { id } = req.params;
+    const user = req.user.username;
+    const sede = req.user.sede;
+
     const userRef = db.collection(COL_USUARIOS).doc(id);
     const userSnap = await userRef.get();
 
     if (!userSnap.exists)
       return res.status(404).json({ message: "Usuario no encontrado." });
 
+    // con esto obtendremos los datos del usuario
+    const datos = userSnap.data();
+    const nombre = datos.username || datos.nombre || "Desconocido";
+
     await userRef.update({
       estado: "inactivo",
       updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    const listaCambios = [];
+    listaCambios.push(`Se inactivó al usuario: ${nombre}`);
+
+    const bitacoraRef = db.collection("bitacora").doc();
+    await bitacoraRef.set({
+      usuario: user,
+      id_modificado: id,
+      accion: "Eliminar usuario",
+      detalles: listaCambios,
+      fecha: FieldValue.serverTimestamp(),
+      sede: sede,
     });
 
     res.status(200).json({ message: "Usuario eliminado (lógicamente)." });
@@ -386,6 +369,19 @@ Router.post("/login", async (req, res) => {
       sameSite: "lax",
       maxAge: 3600000,
     });
+    const listaCambios = [];
+
+    listaCambios.push("Inicio de Sesión");
+
+    const bitacoraRef = db.collection("bitacora").doc();
+    await bitacoraRef.set({
+      usuario: usuario.username,
+      id_modificado: 0,
+      accion: "Login",
+      detalles: listaCambios,
+      fecha: FieldValue.serverTimestamp(),
+      sede: sede,
+    });
 
     return res.status(200).json({
       message: "Login exitoso",
@@ -408,59 +404,16 @@ Router.post("/logout", (req, res) => {
   return res.status(200).json({ message: "Sesión cerrada" });
 });
 
-// api para obtener la info del usuario autenticado
-async function obtenerPerfilUsuario(req, res) {
-  try {
-    const userId = req.user.id;
-
-    if (!userId) {
-      return res.status(200).json({
-        autenticado: true,
-        user: {
-          correo: req.user.correo,
-          username: req.user.username,
-          rol: req.user.rol,
-          sede: req.user.sede,
-        },
-      });
-    }
-
-    const doc = await db.collection(COL_USUARIOS).doc(userId).get();
-
-    if (!doc.exists) {
-      return res.status(404).json({ message: "Usuario no encontrado." });
-    }
-
-    const data = doc.data();
-    const ubi = data.ubicacion || {};
-
-    return res.status(200).json({
-      autenticado: true,
-      user: {
-        id_usuario: doc.id,
-        cedula: data.cedula || "",
-        nombre: data.nombre || "",
-        apellido: data.apellido || "",
-        correo: data.correo || "",
-        telefono: data.telefono || "",
-        username: data.username || "",
-        rol: data.rol || "",
-        region: ubi.region || "",
-        estado: ubi.estado || "",
-        city: ubi.ciudad || "",
-        sede: ubi.sede || "",
-        piso: ubi.piso || "",
-        ala: ubi.ala || "",
-      },
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: "No se pudo obtener el perfil del usuario.",
-      error: error.message,
-    });
-  }
-}
-
-Router.get("/me", verificarToken, obtenerPerfilUsuario);
-Router.get("/usuarios/me", verificarToken, obtenerPerfilUsuario);
+// api para obtener la info de jwt
+Router.get("/me", verificarToken, (req, res) => {
+  return res.status(200).json({
+    autenticado: true,
+    user: {
+      correo: req.user.correo,
+      username: req.user.username,
+      rol: req.user.rol,
+      sede: req.user.sede,
+    },
+  });
+});
 export default Router;

@@ -4,17 +4,38 @@ import { db } from "../config/firebase.js";
 import { FieldValue } from "firebase-admin/firestore";
 import { Timestamp } from "firebase-admin/firestore";
 import verificarToken from "../middleware/verificarToken.js";
+import {
+  normalize,
+  badRequest,
+  requireString,
+} from "../utils/inventory.helpers.js";
+
+import {
+  normalizeLocationInput,
+  normalizeComponent,
+  normalizePeriferico,
+  validatePayloadDuplicates,
+  validateEquipoBody,
+  serialIndexId,
+  locationIdFromData,
+} from "../utils/inventory.validators.js";
+
+import {
+  reserveIndex,
+  releaseIndex,
+  getOrCreateUbicacion,
+  validateUniqueSerial,
+} from "../utils/inventory.firestore.js";
+
+import {
+  COL,
+  COMPONENTES_MAP,
+  PERIFERICOS_MAP,
+  EQUIPOS_MAP,
+  TIPOS_PERMITIDOS,
+} from "../utils/inventory.constants.js";
 
 const Router = express.Router();
-
-const TIPOS_PERMITIDOS = [
-  "Monitor",
-  "Teclado",
-  "Mouse",
-  "Switch",
-  "Impresora",
-  "Corneta",
-];
 
 Router.post("/perifericos/:tipo", async (req, res) => {
   try {
@@ -254,6 +275,216 @@ Router.get("/perifericos/:id", async (req, res) => {
     return res
       .status(500)
       .json({ message: "Error interno al obtener el periférico." });
+  }
+});
+const buildEquipoRelacionado = (id, equipoData) => ({
+  id: id,
+  tipo: equipoData.tipo,
+  marca: equipoData.marca,
+  modelo: equipoData.modelo,
+  serial: equipoData.serial,
+});
+// Construir objeto equipoRelacionado sincronizado
+Router.put("/perifericos/:tipo/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      marca,
+      modelo,
+      serial,
+      estado,
+      notas,
+      procedencia, // Se recibe pero se ignorará para proteger la data original
+      ubicacion,
+      asignadoA,
+    } = req.body;
+
+    const tipoNorm = normalize(req.params.tipo);
+    const tipoCorrecto = TIPOS_PERMITIDOS[tipoNorm];
+    if (!tipoCorrecto) throw badRequest("Tipo de periférico inválido.");
+
+    const resultId = await db.runTransaction(async (tx) => {
+      // --- FASE 1: LECTURAS ---
+      const periRef = db.collection("perifericos").doc(id);
+      const periSnap = await tx.get(periRef);
+      if (!periSnap.exists) throw badRequest("Periférico no encontrado.");
+
+      const current = periSnap.data();
+      const targetSerial = serial || current.serial;
+      const newSerialNorm = normalize(targetSerial);
+      const isSerialChanged = newSerialNorm !== normalize(current.serial);
+
+      // Índices
+      const oldIndexRef = db
+        .collection(COL.indices)
+        .doc(serialIndexId("periferico", current.serial));
+      let newIndexRef = null;
+      if (isSerialChanged) {
+        newIndexRef = db
+          .collection(COL.indices)
+          .doc(serialIndexId("periferico", targetSerial));
+        const newIndexSnap = await tx.get(newIndexRef);
+        if (newIndexSnap.exists)
+          throw badRequest(`El serial "${targetSerial}" ya está en uso.`);
+      }
+
+      // --- Gestión de Equipos y Validación ---
+      const oldEquipoId = current.equipoId;
+      const newEquipoId =
+        asignadoA === "" || asignadoA === "desvincular"
+          ? null
+          : asignadoA || oldEquipoId;
+      const isTeamChanged = oldEquipoId !== newEquipoId;
+
+      let oldEquipoRef = null,
+        oldEquipoSnap = null;
+      let newEquipoRef = null,
+        newEquipoSnap = null;
+
+      // 1. Cargar el equipo antiguo (si existe)
+      if (oldEquipoId) {
+        oldEquipoRef = db.collection(COL.equipos).doc(oldEquipoId);
+        oldEquipoSnap = await tx.get(oldEquipoRef);
+      }
+
+      // 2. Cargar el equipo nuevo (si se asigna a uno)
+      if (newEquipoId) {
+        newEquipoRef = db.collection(COL.equipos).doc(newEquipoId);
+        newEquipoSnap = await tx.get(newEquipoRef);
+        if (!newEquipoSnap.exists)
+          throw badRequest("El equipo seleccionado no existe.");
+
+        const eqData = newEquipoSnap.data();
+        if (!["PC", "Laptop"].includes(eqData.tipo)) {
+          throw badRequest(`Destino inválido para tipo "${eqData.tipo}".`);
+        }
+
+        const yaTieneEsteTipo = (eqData.perifericos || []).some(
+          (p) => p.tipo === tipoCorrecto && p.id !== id,
+        );
+        if (yaTieneEsteTipo)
+          throw badRequest(`El equipo ya tiene un "${tipoCorrecto}" asignado.`);
+      }
+
+      // --- Construcción de datos ---
+      const asigData = ubicacion
+        ? normalizeLocationInput(
+            {
+              ...current.asignacion, // Datos existentes
+              ...ubicacion, // Nuevos cambios (sobreescriben los viejos)
+            },
+            "asignacion",
+          )
+        : current.asignacion;
+
+      // Datos del equipo para la relación
+      let equipoRelacionado = null;
+      if (newEquipoId && newEquipoSnap?.exists) {
+        equipoRelacionado = buildEquipoRelacionado(
+          newEquipoId,
+          newEquipoSnap.data(),
+        );
+      }
+
+      const updatedPerifericoData = {
+        tipo: tipoCorrecto,
+        marca: marca !== undefined ? marca : current.marca,
+        modelo: modelo !== undefined ? modelo : current.modelo,
+        serial: targetSerial,
+        serialNorm: newSerialNorm,
+        estado: estado !== undefined ? estado : current.estado,
+        notas: notas !== undefined ? notas : current.notas,
+        // PROYECTADO: Mantenemos procedencia original, NO se sobreescribe
+        procedencia: current.procedencia,
+        asignacion: asigData,
+        asignado: !!newEquipoId,
+        equipoId: newEquipoId,
+        equipoSerial: newEquipoId
+          ? newEquipoSnap?.data()?.serial || null
+          : null,
+        equipoRelacionado: equipoRelacionado,
+        activo: current.activo,
+      };
+
+      // --- FASE 2: ESCRITURAS ---
+
+      // 1. Manejo de Índices
+      if (isSerialChanged) {
+        tx.delete(oldIndexRef);
+        tx.set(newIndexRef, { ...updatedPerifericoData, prefix: "periferico" });
+      } else {
+        tx.update(oldIndexRef, {
+          ...updatedPerifericoData,
+          prefix: "periferico",
+        });
+      }
+
+      // 2. Sincronización de Arrays en Equipos
+      if (isTeamChanged) {
+        // A) Quitar del viejo
+        if (oldEquipoSnap?.exists) {
+          const oldData = oldEquipoSnap.data();
+          tx.update(oldEquipoRef, {
+            perifericos: (oldData.perifericos || []).filter((p) => p.id !== id),
+            perifericosSerials: (oldData.perifericosSerials || []).filter(
+              (s) => s !== current.serial,
+            ),
+            fechaActualizacion: FieldValue.serverTimestamp(),
+          });
+        }
+        // B) Poner en el nuevo
+        if (newEquipoSnap?.exists) {
+          const newData = newEquipoSnap.data();
+          tx.update(newEquipoRef, {
+            perifericos: [
+              ...(newData.perifericos || []).filter((p) => p.id !== id),
+              { id, ...updatedPerifericoData },
+            ],
+            perifericosSerials: [
+              ...(newData.perifericosSerials || []).filter(
+                (s) => s !== targetSerial,
+              ),
+              targetSerial,
+            ],
+            fechaActualizacion: FieldValue.serverTimestamp(),
+          });
+        }
+      } else if (newEquipoId && newEquipoSnap?.exists) {
+        // C) Actualizar dentro del mismo equipo
+        const newData = newEquipoSnap.data();
+        tx.update(newEquipoRef, {
+          perifericos: (newData.perifericos || []).map((p) =>
+            p.id === id ? { id, ...updatedPerifericoData } : p,
+          ),
+          perifericosSerials: isSerialChanged
+            ? [
+                ...(newData.perifericosSerials || []).filter(
+                  (s) => s !== current.serial,
+                ),
+                targetSerial,
+              ]
+            : newData.perifericosSerials,
+          fechaActualizacion: FieldValue.serverTimestamp(),
+        });
+      }
+
+      // 3. Actualización del documento del periférico
+      tx.update(periRef, {
+        ...updatedPerifericoData,
+        fechaActualizacion: FieldValue.serverTimestamp(),
+      });
+
+      return id;
+    });
+
+    return res
+      .status(200)
+      .json({ message: "Operación realizada con éxito.", id: resultId });
+  } catch (error) {
+    console.error("Error en PUT /perifericos:", error);
+    return res
+      .status(error.statusCode || 500)
+      .json({ message: error.message || "Error interno." });
   }
 });
 
