@@ -50,7 +50,7 @@ export default function EquipoForm({
   });
 
   // Determinar si es un equipo principal o un periférico
-  const isEquipo = formData.type === "CPU" || formData.type === "Laptop";
+  const isEquipo = formData.type === "PC" || formData.type === "Laptop";
   const isPeriferico = formData.type && !isEquipo;
 
   // =========================
@@ -250,7 +250,7 @@ export default function EquipoForm({
             className="block w-full max-w-md border-gray-300 rounded-xl shadow-sm py-3 px-4 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-lg border transition-all outline-none bg-white text-center cursor-pointer"
           >
             <option value="">-- Selecciona una opción --</option>
-            <option value="CPU">CPU</option>
+            <option value="PC">PC</option>
             <option value="Laptop">Laptop</option>
             <option value="Monitor">Monitor</option>
             <option value="Teclado">Teclado</option>
@@ -846,7 +846,7 @@ export default function EquipoForm({
 
                   <div className="bg-white p-5 rounded-xl border border-blue-100 shadow-sm">
                     <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
-                      Seleccionar Equipo (CPU / Laptop)
+                      Seleccionar Equipo (PC / Laptop)
                     </label>
 
                     {loadingEquipos ? (

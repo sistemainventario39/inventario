@@ -18,6 +18,7 @@ export const COMPONENTES_MAP = {
 
 export const PERIFERICOS_MAP = {
   monitor: "Monitor",
+  monitores: "Monitor",
   teclado: "Teclado",
   teclados: "Teclado",
   mouse: "Mouse",

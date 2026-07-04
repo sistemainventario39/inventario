@@ -36,7 +36,7 @@ export default function Registro() {
     const payload = buildPayload(formData);
 
     let url = "";
-    if (tipoDispositivo === "CPU" || tipoDispositivo === "LAPTOP") {
+    if (tipoDispositivo === "PC" || tipoDispositivo === "LAPTOP") {
       url =
         tipoDispositivo === "LAPTOP"
           ? "http://localhost:3001/api/laptop"

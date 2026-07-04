@@ -10,6 +10,7 @@ import equipos from "./apis/equipos.js";
 import bitacora from "./apis/bitacora.js";
 import exportacion from "./apis/exportacion.js";
 import recuperarPassword from "./apis/recuperarPassword.js";
+import estadisticas from "./apis/estadisticas.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
@@ -44,6 +45,7 @@ app.use("/api", recuperarPassword);
 app.use("/api", equipos);
 app.use("/api", bitacora);
 app.use("/api", exportacion);
+app.use("/api", estadisticas);
 
 const server = app.listen(PORT, () => {
   const smtpUser = env("SMTP_USER");

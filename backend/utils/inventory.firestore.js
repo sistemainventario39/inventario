@@ -3,6 +3,8 @@ import {
   normalizeLocationInput,
   locationIdFromData,
 } from "../utils/inventory.validators.js";
+import { db } from "../config/firebase.js";
+import { COL } from "../utils/inventory.constants.js";
 
 export async function getOrCreateUbicacion(tx, input, label) {
   const data = normalizeLocationInput(input, label);

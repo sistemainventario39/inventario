@@ -7,6 +7,7 @@ import {
 import {
   PERIFERICOS_MAP,
   locationRequiredFields,
+  COMPONENTES_MAP,
 } from "../utils/inventory.constants.js";
 
 export function normalizeLocationInput(input, label) {

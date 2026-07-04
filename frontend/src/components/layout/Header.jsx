@@ -85,9 +85,11 @@ export default function Header() {
                   Gestión de Usuarios
                 </NavLink>
               )}
-              <NavLink to="/ubicacion" className={getNavClass}>
-                Ubicación
-              </NavLink>
+              {user?.rol === "Superadministrador" && (
+                <NavLink to="/ubicacion" className={getNavClass}>
+                  Ubicación
+                </NavLink>
+              )}
               <NavLink to="/bitacora" className={getNavClass}>
                 Bitácora
               </NavLink>
