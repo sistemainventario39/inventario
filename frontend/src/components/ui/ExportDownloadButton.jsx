@@ -2,20 +2,14 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { FiDownload, FiFileText, FiGrid } from "react-icons/fi";
+import { normalize } from "../../../../backend/utils/inventory.helpers.js";
 
 const API_BASE = "http://localhost:3001/api";
-
-const normalizeTipo = (value = "") =>
-  String(value)
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
 
 function dedupeTipos(tipos) {
   const vistos = new Set();
   return tipos.filter((tipo) => {
-    const key = normalizeTipo(tipo);
+    const key = normalize(tipo);
     if (!key || vistos.has(key)) return false;
     vistos.add(key);
     return true;
@@ -47,8 +41,7 @@ export default function ExportDownloadButton({ filters = {} }) {
     if (isDownloading) return;
 
     const formatoLabel = formato === "pdf" ? "PDF" : "Excel";
-    const tipoLabel =
-      tipo === "completa" ? "información completa" : tipo;
+    const tipoLabel = tipo === "completa" ? "información completa" : tipo;
 
     toast.loading(`Preparando descarga ${formatoLabel} — ${tipoLabel}...`, {
       id: "export-download",

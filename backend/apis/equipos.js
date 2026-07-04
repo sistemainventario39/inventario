@@ -64,8 +64,6 @@ function buildEquipoDoc(
   };
 }
 
-// ... (resto de tus importaciones y funciones de validación) ...
-
 async function registrarEquipo(tipoRaw, req, res) {
   try {
     const tipoNorm = normalize(tipoRaw);

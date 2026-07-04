@@ -3,9 +3,11 @@ import { db } from "../config/firebase.js";
 import { FieldValue } from "firebase-admin/firestore";
 
 const Router = express.Router();
+
+//Esta api permite obtener la información de la bitacora.
 Router.get("/bitacora", async (req, res) => {
   try {
-    // Obtenemos los registros ordenados del más reciente al más antiguo
+    // Obtenemos los registros ordenados del más reciente al más antiguo, con el método "orderBy"
     const snapshot = await db
       .collection("bitacora")
       .orderBy("fecha", "desc")
@@ -17,7 +19,6 @@ Router.get("/bitacora", async (req, res) => {
         id: doc.id,
         accion: data.accion || "Sin acción",
         detalles: data.detalles || [], // Arreglo de cambios
-        // Convertimos el Timestamp de Firestore a formato ISO para el frontend
         fecha: data.fecha ? data.fecha.toDate().toISOString() : null,
         id_modificado: data.id_modificado || "N/A",
         sede: data.sede || "N/A",

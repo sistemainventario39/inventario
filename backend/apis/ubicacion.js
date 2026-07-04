@@ -14,10 +14,12 @@ const COL_UBICACIONES = "ubicaciones";
 
 Router.get("/region", async (_req, res) => {
   try {
-    const [rows] = await pool.query(
-      "SELECT id_region, region AS nombre FROM region ORDER BY region ASC",
-    );
-    res.status(200).json(rows);
+    const snapshot = await db.collection("regiones").orderBy("nombre").get();
+    const regiones = snapshot.docs.map((doc) => ({
+      id_region: doc.id,
+      nombre: doc.data().nombre,
+    }));
+    res.status(200).json(regiones);
   } catch (e) {
     console.error("Error al obtener regiones:", e.message);
     res.status(500).json({ message: "Error al obtener regiones" });
@@ -25,17 +27,19 @@ Router.get("/region", async (_req, res) => {
 });
 
 Router.get("/region/:id/estados", async (req, res) => {
-  const { id } = req.params;
-  if (!id) {
-    return res.status(400).json({ message: "Región requerida" });
-  }
-
+  const { id } = req.params; // Ejemplo: "Centro Occidental" o el ID de la región
   try {
-    const [rows] = await pool.query(
-      "SELECT id_estado, estado AS nombre FROM estados WHERE id_region = ? ORDER BY estado ASC",
-      [id],
-    );
-    res.status(200).json(rows);
+    const snapshot = await db
+      .collection("estados")
+      .where("id_region", "==", id)
+      .orderBy("nombre")
+      .get();
+
+    const estados = snapshot.docs.map((doc) => ({
+      id_estado: doc.id,
+      nombre: doc.data().nombre,
+    }));
+    res.status(200).json(estados);
   } catch (e) {
     console.error("Error al obtener estados:", e.message);
     res.status(500).json({ message: "Error al obtener estados" });
@@ -43,17 +47,19 @@ Router.get("/region/:id/estados", async (req, res) => {
 });
 
 Router.get("/estados/:id/ciudades", async (req, res) => {
-  const { id } = req.params;
-  if (!id) {
-    return res.status(400).json({ message: "Estado requerido" });
-  }
-
+  const { id } = req.params; // Ejemplo: "Lara" o el ID del estado
   try {
-    const [rows] = await pool.query(
-      "SELECT id_ciudad, ciudad AS nombre FROM ciudades WHERE id_estado = ? ORDER BY ciudad ASC",
-      [id],
-    );
-    res.status(200).json(rows);
+    const snapshot = await db
+      .collection("ciudades")
+      .where("id_estado", "==", id)
+      .orderBy("nombre")
+      .get();
+
+    const ciudades = snapshot.docs.map((doc) => ({
+      id_ciudad: doc.id,
+      nombre: doc.data().nombre,
+    }));
+    res.status(200).json(ciudades);
   } catch (e) {
     console.error("Error al obtener ciudades:", e.message);
     res.status(500).json({ message: "Error al obtener ciudades" });
@@ -62,7 +68,10 @@ Router.get("/estados/:id/ciudades", async (req, res) => {
 
 Router.get("/ubicaciones", async (_req, res) => {
   try {
-    const snap = await db.collection(COL_UBICACIONES).get();
+    const snap = await db
+      .collection(COL_UBICACIONES)
+      .where("status", "==", "Activo")
+      .get();
     const unicasMap = new Map();
 
     snap.docs.forEach((doc) => {
@@ -101,7 +110,14 @@ Router.post(
       const { region, estado, ciudad, sede, piso, ala } = req.body;
 
       const normUbicacion = normalizeLocationInput(
-        { region, estado, ciudad, sede, piso, ala: ala || null },
+        {
+          region,
+          estado,
+          ciudad,
+          sede,
+          piso,
+          ala: ala || null,
+        },
         "ubicación",
       );
 
@@ -118,6 +134,7 @@ Router.post(
       await ubiRef.set({
         ...normUbicacion,
         createdAt: FieldValue.serverTimestamp(),
+        status: "Activo",
       });
 
       res.status(201).json({
@@ -133,6 +150,40 @@ Router.post(
     }
   },
 );
+
+Router.get("/ubicaciones/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const ubiRef = db.collection("ubicaciones").doc(id);
+    const ubiSnap = await ubiRef.get();
+
+    if (!ubiSnap.exists) {
+      return res.status(404).json({
+        message: "La ubicación solicitada no existe.",
+      });
+    }
+
+    const ubiData = ubiSnap.data();
+
+    return res.status(200).json({
+      id: ubiSnap.id,
+      ...ubiData,
+    });
+  } catch (error) {
+    console.error("Error al obtener la ubicación:", error);
+    return res
+      .status(500)
+      .json({ message: "Error interno al obtener la ubicación." });
+  }
+});
+
+const buildEquipoRelacionado = (id, equipoData) => ({
+  id: id,
+  tipo: equipoData.tipo,
+  marca: equipoData.marca,
+  modelo: equipoData.modelo,
+  serial: equipoData.serial,
+});
 
 Router.put(
   "/ubicaciones/:id",
@@ -187,6 +238,7 @@ Router.put(
           ...normUbicacion,
           createdAt: oldData.createdAt || FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp(),
+          status: "Activo",
         });
       });
 
@@ -227,5 +279,47 @@ Router.delete(
     }
   },
 );
+
+Router.put("/ubicaciones/eliminadas/:id", verificarToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = req.user.username;
+    const sede = req.user.sede;
+
+    const userRef = db.collection(COL_UBICACIONES).doc(id);
+    const userSnap = await userRef.get();
+
+    if (!userSnap.exists)
+      return res.status(404).json({ message: "Ubicación no encontrada." });
+
+    // con esto obtendremos los datos del usuario
+    const datos = userSnap.data();
+    const nombre = datos.username || datos.nombre || "Desconocido";
+
+    await userRef.update({
+      status: "inactivo",
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    const listaCambios = [];
+    listaCambios.push(`Se inactivó la ubicación: ${nombre}`);
+
+    const bitacoraRef = db.collection("bitacora").doc();
+    await bitacoraRef.set({
+      usuario: user,
+      id_modificado: id,
+      accion: "Eliminar ubicación",
+      detalles: listaCambios,
+      fecha: FieldValue.serverTimestamp(),
+      sede: sede,
+    });
+
+    res.status(200).json({ message: "Ubicación eliminada (lógicamente)." });
+  } catch (e) {
+    res
+      .status(500)
+      .json({ message: "Error al eliminar ubicación.", error: e.message });
+  }
+});
 
 export default Router;

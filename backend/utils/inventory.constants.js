@@ -45,3 +45,18 @@ export const TIPOS_PERMITIDOS = {
   corneta: "Corneta",
   cornetas: "Corneta",
 };
+
+export const CANONICAL_TIPOS = {
+  pc: "PC",
+  laptop: "Laptop",
+  monitor: "Monitor",
+  mouse: "Mouse",
+  teclado: "Teclado",
+  teclados: "Teclado",
+  switch: "Switch",
+  switches: "Switch",
+  impresora: "Impresora",
+  impresoras: "Impresora",
+  corneta: "Corneta",
+  cornetas: "Corneta",
+};

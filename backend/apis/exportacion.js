@@ -3,30 +3,10 @@ import PDFDocument from "pdfkit";
 import * as XLSX from "xlsx";
 import { db } from "../config/firebase.js";
 import verificarToken from "../middleware/verificarToken.js";
+import { normalize } from "../utils/inventory.helpers.js";
+import { CANONICAL_TIPOS } from "../utils/inventory.constants.js";
 
 const Router = express.Router();
-
-const normalize = (value = "") =>
-  String(value)
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-
-const CANONICAL_TIPOS = {
-  pc: "PC",
-  laptop: "Laptop",
-  monitor: "Monitor",
-  mouse: "Mouse",
-  teclado: "Teclado",
-  teclados: "Teclado",
-  switch: "Switch",
-  switches: "Switch",
-  impresora: "Impresora",
-  impresoras: "Impresora",
-  corneta: "Corneta",
-  cornetas: "Corneta",
-};
 
 function getCanonicalTipo(tipo) {
   const trimmed = String(tipo || "").trim();
@@ -58,8 +38,7 @@ function mapItem(doc) {
 function userCanSeeItem(data, rol, sedeUsuarioNormalizada) {
   if (rol === "Superadministrador") return true;
 
-  const sedeComponente =
-    data.asignacion?.sede?.trim().toLowerCase() || null;
+  const sedeComponente = data.asignacion?.sede?.trim().toLowerCase() || null;
   const torreComponente = data.sede?.trim().toLowerCase() || null;
 
   return (
@@ -242,7 +221,11 @@ function generateExcelBuffer(rows) {
 
 function generatePdfBuffer(rows, titulo) {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 40, size: "A4", layout: "landscape" });
+    const doc = new PDFDocument({
+      margin: 40,
+      size: "A4",
+      layout: "landscape",
+    });
     const chunks = [];
 
     doc.on("data", (chunk) => chunks.push(chunk));
@@ -251,13 +234,19 @@ function generatePdfBuffer(rows, titulo) {
 
     doc.fontSize(16).text(titulo, { align: "center" });
     doc.moveDown();
-    doc.fontSize(9).fillColor("#64748b").text(`Generado: ${new Date().toLocaleString("es-VE")}`, {
-      align: "center",
-    });
+    doc
+      .fontSize(9)
+      .fillColor("#64748b")
+      .text(`Generado: ${new Date().toLocaleString("es-VE")}`, {
+        align: "center",
+      });
     doc.moveDown(1.5);
 
     if (rows.length === 0) {
-      doc.fontSize(11).fillColor("#000").text("No hay registros para exportar.");
+      doc
+        .fontSize(11)
+        .fillColor("#000")
+        .text("No hay registros para exportar.");
       doc.end();
       return;
     }
@@ -300,10 +289,12 @@ function generatePdfBuffer(rows, titulo) {
 
       columns.forEach((col) => {
         doc.rect(x, y, col.width, rowHeight).fill(bgColor);
-        doc.fillColor("#1e293b").text(String(row[col.key] ?? ""), x + 4, y + 6, {
-          width: col.width - 8,
-          ellipsis: true,
-        });
+        doc
+          .fillColor("#1e293b")
+          .text(String(row[col.key] ?? ""), x + 4, y + 6, {
+            width: col.width - 8,
+            ellipsis: true,
+          });
         x += col.width;
       });
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { FiX, FiSave, FiTrash2, FiMapPin } from "react-icons/fi";
 import { useForm } from "react-hook-form";
@@ -29,7 +29,12 @@ const resolverNombre = (lista, id, campoId) => {
 
 async function resolverIdsDesdeNombres(ubicacion) {
   const regionesRes = await axios.get(`${API_BASE}/region`);
-  const regionItem = regionesRes.data.find((r) => r.nombre === ubicacion.region);
+  const regionItem = regionesRes.data.find(
+    (r) => r.nombre === ubicacion.region,
+  );
+
+  console.debug("resolverIdsDesdeNombres - ubicacion.region", ubicacion.region);
+  console.debug("resolverIdsDesdeNombres - regionItem", regionItem);
 
   if (!regionItem) {
     return { region: "", estado: "", ciudad: "" };
@@ -54,6 +59,9 @@ async function resolverIdsDesdeNombres(ubicacion) {
   const ciudadItem = ciudadesRes.data.find(
     (c) => c.nombre === ubicacion.ciudad,
   );
+
+  console.debug("resolverIdsDesdeNombres - estadoItem", estadoItem);
+  console.debug("resolverIdsDesdeNombres - ciudadItem", ciudadItem);
 
   return {
     region: String(regionItem.id_region),
@@ -190,10 +198,7 @@ function UbicacionFormFields({
 
       <div>
         <label className="block text-sm font-bold text-black mb-2">Ala</label>
-        <select
-          {...register("ala")}
-          className={getFieldProps("ala").className}
-        >
+        <select {...register("ala")} className={getFieldProps("ala").className}>
           <option value="">-- Sin ala --</option>
           {ALA_OPCIONES.map((ala) => (
             <option key={ala} value={ala}>
@@ -220,7 +225,7 @@ export default function UbicacionActionModal({
 }) {
   const prevRegion = useRef(null);
   const prevEstado = useRef(null);
-
+  const [valoresPendientes, setValoresPendientes] = useState(null);
   const {
     register,
     handleSubmit,
@@ -260,7 +265,16 @@ export default function UbicacionActionModal({
     if (type === "edit" && ubicacion) {
       const cargarFormulario = async () => {
         try {
-          const ids = await resolverIdsDesdeNombres(ubicacion);
+          const respuesta = await axios.get(
+            `${API_BASE}/ubicaciones/${ubicacion.id}`,
+          );
+          const ubiCompleta = respuesta.data;
+
+          const ids = await resolverIdsDesdeNombres(ubiCompleta);
+
+          console.debug("cargarFormulario - ids resueltos:", ids);
+          console.debug("cargarFormulario - ubiCompleta:", ubiCompleta);
+
           prevRegion.current = ids.region;
           prevEstado.current = ids.estado;
 
@@ -268,10 +282,17 @@ export default function UbicacionActionModal({
             region: ids.region,
             estado: ids.estado,
             ciudad: ids.ciudad,
-            sede: ubicacion.sede || "",
-            piso: String(ubicacion.piso || ""),
-            ala: ubicacion.ala || "",
+            sede: ubiCompleta.sede || "",
+            piso: String(ubiCompleta.piso || ""),
+            ala: ubiCompleta.ala || "",
           });
+
+          setValoresPendientes({
+            region: ids.region,
+            estado: ids.estado,
+            ciudad: ids.ciudad,
+          });
+          console.log(prevRegion);
         } catch (error) {
           console.error("Error al cargar datos de edición:", error);
           toast.error("No se pudieron cargar los datos de la ubicación.");
@@ -298,6 +319,44 @@ export default function UbicacionActionModal({
     prevEstado.current = estadoActual;
   }, [estadoActual, setValue]);
 
+  // Aplica valores pendientes (provenientes del payload del servidor)
+  // cuando las listas dependientes (estadoList / ciudadesList) ya están cargadas.
+  useEffect(() => {
+    if (!valoresPendientes) return;
+
+    console.debug("aplicarValoresPendientes - pendientes:", valoresPendientes);
+    console.debug("aplicarValoresPendientes - listas lengths:", {
+      regionList: regionList.length,
+      estadoList: estadoList.length,
+      ciudadesList: ciudadesList.length,
+    });
+
+    // Aplicar en orden: region -> estado -> ciudad
+    // 1) Si tenemos región pendiente y las regiones ya llegaron, setValue region.
+    if (valoresPendientes.region && regionList.length > 0) {
+      setValue("region", valoresPendientes.region);
+      // after setting region, dependencias (estadoList) se cargarán automáticamente
+    }
+
+    // 2) Si tenemos estado pendiente y la lista de estados ya llegó, setValue estado.
+    if (valoresPendientes.estado && estadoList.length > 0) {
+      setValue("estado", valoresPendientes.estado);
+    }
+
+    // 3) Si tenemos ciudad pendiente y la lista de ciudades ya llegó, setValue ciudad.
+    if (valoresPendientes.ciudad && ciudadesList.length > 0) {
+      setValue("ciudad", valoresPendientes.ciudad);
+    }
+
+    // Limpiar pendientes sólo cuando las opciones relevantes estén disponibles
+    const canClear =
+      (!valoresPendientes.region || regionList.length > 0) &&
+      (!valoresPendientes.estado || estadoList.length > 0) &&
+      (!valoresPendientes.ciudad || ciudadesList.length > 0);
+
+    if (canClear) setValoresPendientes(null);
+  }, [valoresPendientes, regionList, estadoList, ciudadesList, setValue]);
+
   const getFieldProps = (name) => {
     const state = getFieldState(name);
     return {
@@ -310,6 +369,7 @@ export default function UbicacionActionModal({
   };
 
   const onSubmitEdit = async (data) => {
+    // 1. Corrección de los nombres de los campos (campoId)
     const payload = {
       region: resolverNombre(regionList, data.region, "id_region"),
       estado: resolverNombre(estadoList, data.estado, "id_estado"),
@@ -319,11 +379,13 @@ export default function UbicacionActionModal({
       ala: data.ala || null,
     };
 
+    // 2. Si alguna resolución falla, se detiene
     if (!payload.region || !payload.estado || !payload.ciudad) {
       toast.error("Selecciona región, estado y ciudad válidos.");
       return;
     }
 
+    // 3. Envío de datos por Axios
     const peticion = axios.put(
       `${API_BASE}/ubicaciones/${ubicacion.id}`,
       payload,
@@ -341,11 +403,12 @@ export default function UbicacionActionModal({
         error.response?.data?.message || "Error al actualizar la ubicación",
     });
   };
-
   const handleDelete = async () => {
-    const peticion = axios.delete(`${API_BASE}/ubicaciones/${ubicacion.id}`, {
-      withCredentials: true,
-    });
+    const peticion = axios.put(
+      `${API_BASE}/ubicaciones/eliminadas/${ubicacion.id}`,
+      {}, // Segundo argumento: Cuerpo de la petición vacío
+      { withCredentials: true }, // Tercer argumento: Configuración correcta de Axios
+    );
 
     toast.promise(peticion, {
       loading: "Eliminando ubicación...",
@@ -433,9 +496,7 @@ export default function UbicacionActionModal({
                 </p>
                 <p>
                   <span className="font-bold text-gray-700">Ala:</span>{" "}
-                  <span className="text-gray-900">
-                    {ubicacion.ala || "—"}
-                  </span>
+                  <span className="text-gray-900">{ubicacion.ala || "—"}</span>
                 </p>
               </div>
             </div>

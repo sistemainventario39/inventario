@@ -404,6 +404,46 @@ Router.post("/logout", (req, res) => {
   return res.status(200).json({ message: "Sesión cerrada" });
 });
 
+Router.get("/usuarios/me", verificarToken, async (req, res) => {
+  try {
+    // Usamos el correo o username que viene en el token para buscar el documento completo
+    const correo = req.user.correo;
+
+    // Si tu token incluye el ID del documento (ej. req.user.id),
+    // podrías usar directamente db.collection("usuarios").doc(req.user.id).get()
+
+    const snapshot = await db
+      .collection("usuarios")
+      .where("correo", "==", correo) // Filtramos por el identificador único
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      return res.status(404).json({
+        autenticado: false,
+        message: "Usuario no encontrado en la base de datos.",
+      });
+    }
+
+    const userDoc = snapshot.docs[0];
+    const userData = userDoc.data();
+
+    // Devolvemos toda la información de Firestore
+    return res.status(200).json({
+      autenticado: true,
+      user: {
+        id: userDoc.id, // El ID real del documento en Firestore
+        ...userData, // Esto inyectará cedula, nombre, apellido, telefono, etc.
+      },
+    });
+  } catch (error) {
+    console.error("Error al obtener información completa del usuario:", error);
+    return res
+      .status(500)
+      .json({ message: "Error interno al obtener el perfil" });
+  }
+});
+
 // api para obtener la info de jwt
 Router.get("/me", verificarToken, (req, res) => {
   return res.status(200).json({

@@ -2,7 +2,15 @@ import React, { useState, useEffect, useCallback } from "react";
 import Header from "../components/layout/Header";
 import axios from "axios";
 import { FiMail, FiShield, FiEdit2, FiSave, FiX, FiUser } from "react-icons/fi";
-import { FaUser, FaUserAstronaut, FaUserTie, FaUserNinja, FaUserGraduate, FaUserSecret, FaRobot } from "react-icons/fa";
+import {
+  FaUser,
+  FaUserAstronaut,
+  FaUserTie,
+  FaUserNinja,
+  FaUserGraduate,
+  FaUserSecret,
+  FaRobot,
+} from "react-icons/fa";
 import { GiNinjaHead } from "react-icons/gi";
 import { BsPersonBadge, BsPersonWorkspace } from "react-icons/bs";
 import { useForm } from "react-hook-form";
@@ -16,15 +24,30 @@ const API_BASE = "http://localhost:3001/api";
 const availableIcons = [
   { id: 1, icon: FiUser, name: "Usuario Básico", color: "text-gray-400" },
   { id: 2, icon: FaUser, name: "Usuario Clásico", color: "text-blue-400" },
-  { id: 3, icon: FaUserAstronaut, name: "Astronauta", color: "text-purple-400" },
+  {
+    id: 3,
+    icon: FaUserAstronaut,
+    name: "Astronauta",
+    color: "text-purple-400",
+  },
   { id: 4, icon: FaUserTie, name: "Ejecutivo", color: "text-indigo-400" },
   { id: 5, icon: FaUserNinja, name: "Ninja", color: "text-red-400" },
   { id: 6, icon: FaUserGraduate, name: "Graduado", color: "text-green-400" },
   { id: 7, icon: FaUserSecret, name: "Agente Secreto", color: "text-gray-600" },
   { id: 8, icon: FaRobot, name: "Robot", color: "text-cyan-400" },
   { id: 9, icon: GiNinjaHead, name: "Ninja Head", color: "text-slate-400" },
-  { id: 10, icon: BsPersonBadge, name: "Identificado", color: "text-emerald-400" },
-  { id: 11, icon: BsPersonWorkspace, name: "Trabajador", color: "text-orange-400" },
+  {
+    id: 10,
+    icon: BsPersonBadge,
+    name: "Identificado",
+    color: "text-emerald-400",
+  },
+  {
+    id: 11,
+    icon: BsPersonWorkspace,
+    name: "Trabajador",
+    color: "text-orange-400",
+  },
 ];
 
 const inputClass = ({ hasError, isSuccess }) => `
@@ -40,6 +63,7 @@ const inputClass = ({ hasError, isSuccess }) => `
 `;
 
 function mapUserToForm(user) {
+  const ubi = user.ubicacion || {};
   return {
     cedula: user.cedula || "",
     nombre: user.nombre || "",
@@ -49,12 +73,12 @@ function mapUserToForm(user) {
     usuario: user.username || "",
     password: "",
     rol: user.rol || "",
-    region: user.region ? String(user.region) : "",
-    estado: user.estado ? String(user.estado) : "",
-    city: user.city ? String(user.city) : "",
-    sede: user.sede ? String(user.sede) : "",
-    piso: user.piso ? String(user.piso) : "",
-    ala: user.ala ? String(user.ala) : "",
+    region: ubi.region ? String(ubi.region) : "",
+    estado: ubi.estado ? String(ubi.estado) : "",
+    city: ubi.ciudad ? String(ubi.ciudad) : "",
+    sede: ubi.sede ? String(ubi.sede) : "",
+    piso: ubi.piso ? String(ubi.piso) : "",
+    ala: ubi.ala ? String(ubi.ala) : "",
   };
 }
 
@@ -161,7 +185,7 @@ export default function Perfil() {
   };
 
   const onSubmit = async (data) => {
-    if (!profileUser?.id_usuario) {
+    if (!profileUser?.id) {
       toast.error("No se encontró el identificador del usuario.");
       return;
     }
@@ -184,7 +208,7 @@ export default function Perfil() {
     };
 
     const peticion = axios.put(
-      `${API_BASE}/usuarios/${profileUser.id_usuario}`,
+      `${API_BASE}/usuarios/${profileUser.id}`,
       payload,
       { withCredentials: true },
     );
@@ -305,7 +329,7 @@ export default function Perfil() {
                     </div>
                     <div className="flex items-center text-sm text-gray-500">
                       <FiShield className="mr-3 text-green-500 shrink-0" />
-                      {profileUser?.sede || "Sin sede asignada"}
+                      {profileUser?.ubicacion?.sede || "Sin sede asignada"}
                     </div>
                   </div>
                 </div>

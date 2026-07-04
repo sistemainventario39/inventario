@@ -49,11 +49,3 @@ const server = app.listen(PORT, () => {
   const smtpUser = env("SMTP_USER");
   const smtpOk = Boolean(smtpUser && env("SMTP_PASS") && getTransporter());
 });
-
-server.on("error", (err) => {
-  if (err.code === "EADDRINUSE") {
-  } else {
-    console.error(err);
-  }
-  process.exit(1);
-});
