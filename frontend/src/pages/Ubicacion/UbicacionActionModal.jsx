@@ -26,7 +26,7 @@ const resolverNombre = (lista, id, campoId) => {
 };
 
 async function resolverIdsDesdeNombres(ubicacion) {
-  const regionesRes = await axios.get(`/region`);
+  const regionesRes = await axios.get(`/api/region`);
   const regionItem = regionesRes.data.find(
     (r) => r.nombre === ubicacion.region,
   );
@@ -39,7 +39,7 @@ async function resolverIdsDesdeNombres(ubicacion) {
   }
 
   const estadosRes = await axios.get(
-    `/region/${regionItem.id_region}/estados`,
+    `/api/region/${regionItem.id_region}/estados`,
   );
   const estadoItem = estadosRes.data.find((e) => e.nombre === ubicacion.estado);
 
@@ -52,7 +52,7 @@ async function resolverIdsDesdeNombres(ubicacion) {
   }
 
   const ciudadesRes = await axios.get(
-    `/estados/${estadoItem.id_estado}/ciudades`,
+    `/api/estados/${estadoItem.id_estado}/ciudades`,
   );
   const ciudadItem = ciudadesRes.data.find(
     (c) => c.nombre === ubicacion.ciudad,
@@ -264,7 +264,7 @@ export default function UbicacionActionModal({
       const cargarFormulario = async () => {
         try {
           const respuesta = await axios.get(
-            `/ubicaciones/${ubicacion.id}`,
+            `/api/ubicaciones/${ubicacion.id}`,
           );
           const ubiCompleta = respuesta.data;
 
@@ -385,7 +385,7 @@ export default function UbicacionActionModal({
 
     // 3. Envío de datos por Axios
     const peticion = axios.put(
-      `/ubicaciones/${ubicacion.id}`,
+      `/api/ubicaciones/${ubicacion.id}`,
       payload,
       { withCredentials: true },
     );
@@ -403,7 +403,7 @@ export default function UbicacionActionModal({
   };
   const handleDelete = async () => {
     const peticion = axios.put(
-      `/ubicaciones/eliminadas/${ubicacion.id}`,
+      `/api/ubicaciones/eliminadas/${ubicacion.id}`,
       {}, // Segundo argumento: Cuerpo de la petición vacío
       { withCredentials: true }, // Tercer argumento: Configuración correcta de Axios
     );

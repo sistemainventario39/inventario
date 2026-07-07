@@ -109,7 +109,7 @@ export default function Perfil() {
 
   const fetchProfile = useCallback(async () => {
     try {
-      const response = await axios.get(`/usuarios/me`, {
+      const response = await axios.get(`/api/usuarios/me`, {
         withCredentials: true,
       });
 
