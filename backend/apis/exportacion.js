@@ -221,80 +221,138 @@ function generateExcelBuffer(rows) {
 
 function generatePdfBuffer(rows, titulo) {
   return new Promise((resolve, reject) => {
+    // Configuración a TAMAÑO OFICIO (LEGAL) y orientación VERTICAL (portrait)
     const doc = new PDFDocument({
       margin: 40,
-      size: "A4",
-      layout: "landscape",
+      size: "LEGAL",
+      layout: "portrait",
     });
-    const chunks = [];
 
+    const chunks = [];
     doc.on("data", (chunk) => chunks.push(chunk));
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
 
-    doc.fontSize(16).text(titulo, { align: "center" });
-    doc.moveDown();
+    // --- 1. CABECERA Y LOGO (Diseño limpio y separado) ---
+    // Posicionamos el logo arriba a la izquierda
+    try {
+      doc.image("../frontend/public/logo_cantv.png", 40, 35, { width: 85 });
+    } catch (error) {
+      console.warn(
+        "Logo no encontrado. Asegúrate de colocar la ruta correcta.",
+      );
+    }
+
+    // Dejamos un espacio vertical seguro antes de colocar el título para que nunca se encimen
+    doc.y = 85;
+
+    // Título principal con mejor presencia tipográfica y color institucional
     doc
-      .fontSize(9)
+      .font("Helvetica-Bold")
+      .fontSize(14)
+      .fillColor("#1e3a8a")
+      .text(titulo, { align: "center" });
+    doc.moveDown(0.2);
+
+    // Subtítulo con fecha actual y un tono gris suave
+    doc
+      .font("Helvetica")
+      .fontSize(8)
       .fillColor("#64748b")
-      .text(`Generado: ${new Date().toLocaleString("es-VE")}`, {
+      .text(`Generado el: ${new Date().toLocaleString("es-VE")}`, {
         align: "center",
       });
-    doc.moveDown(1.5);
+    doc.moveDown(0.8);
+
+    // Línea divisoria decorativa sutil para separar la cabecera de la tabla
+    doc
+      .save()
+      .strokeColor("#cbd5e1")
+      .lineWidth(0.75)
+      .moveTo(40, doc.y)
+      .lineTo(doc.page.width - 40, doc.y)
+      .stroke()
+      .restore();
+
+    doc.moveDown(1);
 
     if (rows.length === 0) {
       doc
-        .fontSize(11)
+        .font("Helvetica")
+        .fontSize(10)
         .fillColor("#000")
-        .text("No hay registros para exportar.");
+        .text("No hay registros para exportar.", { align: "center" });
       doc.end();
       return;
     }
 
+    // --- 2. CONFIGURACIÓN DE COLUMNAS Y CENTRADO ---
     const columns = [
-      { header: "Tipo", key: "Tipo", width: 70 },
+      { header: "Tipo", key: "Tipo", width: 60 },
       { header: "Serial", key: "Serial", width: 90 },
       { header: "Marca", key: "Marca", width: 70 },
-      { header: "Modelo", key: "Modelo", width: 70 },
+      { header: "Modelo", key: "Modelo", width: 80 },
       { header: "Ubicación", key: "Ubicación", width: 80 },
-      { header: "Estado", key: "Estado", width: 60 },
+      { header: "Estado", key: "Estado", width: 52 },
       { header: "Observaciones", key: "Observaciones", width: 100 },
     ];
 
-    const startX = 40;
-    let y = doc.y;
+    const totalTableWidth = columns.reduce((sum, col) => sum + col.width, 0);
+    const startX = (doc.page.width - totalTableWidth) / 2;
     const rowHeight = 22;
+    let y = doc.y;
 
-    doc.fontSize(8).fillColor("#ffffff");
-    columns.reduce((x, col) => {
-      doc.rect(x, y, col.width, rowHeight).fill("#1e40af");
-      doc.fillColor("#ffffff").text(col.header, x + 4, y + 6, {
-        width: col.width - 8,
-        ellipsis: true,
+    // Función auxiliar para redibujar la cabecera de la tabla en páginas nuevas
+    const drawTableHeader = (currentY) => {
+      let x = startX;
+      doc.fontSize(8.5).font("Helvetica-Bold");
+
+      columns.forEach((col) => {
+        doc.rect(x, currentY, col.width, rowHeight).fill("#1d4ed8"); // Azul corporativo más atractivo
+        doc.fillColor("#ffffff").text(col.header, x, currentY + 7, {
+          width: col.width,
+          align: "center",
+        });
+        x += col.width;
       });
-      return x + col.width;
-    }, startX);
+      return currentY + rowHeight;
+    };
 
-    y += rowHeight;
-    doc.fillColor("#000000");
+    // Dibujar primera cabecera de la tabla
+    y = drawTableHeader(y);
+
+    // --- 3. DIBUJADO DE FILAS ---
+    doc.font("Helvetica");
 
     rows.forEach((row, index) => {
-      if (y > doc.page.height - 60) {
-        doc.addPage({ layout: "landscape", margin: 40 });
-        y = 40;
+      // Salto de página automático manteniendo diseño
+      if (y > doc.page.height - 50) {
+        doc.addPage({ size: "LEGAL", layout: "portrait", margin: 40 });
+        y = 50; // Margen superior en página nueva
+        y = drawTableHeader(y);
       }
 
+      // Filas con efecto cebra muy suave y estético
       const bgColor = index % 2 === 0 ? "#f8fafc" : "#ffffff";
       let x = startX;
+      doc.fontSize(7.5);
 
       columns.forEach((col) => {
         doc.rect(x, y, col.width, rowHeight).fill(bgColor);
         doc
-          .fillColor("#1e293b")
+          .rect(x, y, col.width, rowHeight)
+          .strokeColor("#f1f5f9")
+          .lineWidth(0.5)
+          .stroke();
+
+        doc
+          .fillColor("#334155")
           .text(String(row[col.key] ?? ""), x + 4, y + 6, {
             width: col.width - 8,
+            align: col.key === "Observaciones" ? "left" : "center",
             ellipsis: true,
           });
+
         x += col.width;
       });
 

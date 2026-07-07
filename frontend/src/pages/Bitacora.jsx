@@ -15,6 +15,9 @@ export default function Bitacora() {
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
 
+  // 1. NUEVO ESTADO: Para guardar las sedes de la API
+  const [sedesOpciones, setSedesOpciones] = useState([]);
+
   // Estados para la paginación
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -31,7 +34,22 @@ export default function Bitacora() {
         setBitacora([]);
       }
     };
+
+    // 2. NUEVA FUNCIÓN: Para obtener las sedes
+    const fetchSedes = async () => {
+      try {
+        const response = await axios.get("http://localhost:3001/api/sede", {
+          withCredentials: true, // Agregado por si tu API requiere autenticación
+        });
+        setSedesOpciones(Array.isArray(response.data) ? response.data : []);
+      } catch (error) {
+        console.error("Error cargando sedes:", error);
+        setSedesOpciones([]);
+      }
+    };
+
     fetchBitacora();
+    fetchSedes(); // Ejecutamos la petición de sedes al montar el componente
   }, []);
 
   // Filtrado reactivo
@@ -115,8 +133,13 @@ export default function Bitacora() {
                 }}
               >
                 <option value="">Todas las sedes</option>
-                <option value="Torre 30">Torre 30</option>
-                <option value="Torre CANTV">Torre CANTV</option>
+
+                {/* 3. MAPEO DE OPCIONES DINÁMICAS */}
+                {sedesOpciones.map((sede) => (
+                  <option key={sede.id_sede} value={sede.nombre}>
+                    {sede.nombre}
+                  </option>
+                ))}
               </select>
             </div>
             <div>

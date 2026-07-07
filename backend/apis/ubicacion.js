@@ -26,6 +26,36 @@ Router.get("/region", async (_req, res) => {
     res.status(500).json({ message: "Error al obtener regiones" });
   }
 });
+Router.get("/sede", async (_req, res) => {
+  try {
+    const snapshot = await db.collection("ubicaciones").orderBy("sede").get();
+
+    const sedesUnicas = [];
+    const nombresVistos = new Set();
+
+    snapshot.docs.forEach((doc) => {
+      const nombreOriginal = doc.data().sede;
+
+      if (nombreOriginal) {
+        const nombreNormalizado = nombreOriginal.trim().toLowerCase();
+
+        if (!nombresVistos.has(nombreNormalizado)) {
+          nombresVistos.add(nombreNormalizado);
+
+          sedesUnicas.push({
+            id_sede: doc.id,
+            nombre: nombreOriginal,
+          });
+        }
+      }
+    });
+
+    res.status(200).json(sedesUnicas);
+  } catch (e) {
+    console.error("Error al obtener sedes:", e.message);
+    res.status(500).json({ message: "Error al obtener sedes" });
+  }
+});
 
 Router.get("/region/:id/estados", async (req, res) => {
   const { id } = req.params; // Ejemplo: "Centro Occidental" o el ID de la región
