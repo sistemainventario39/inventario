@@ -174,7 +174,7 @@ export default function Perfil() {
     };
 
     const peticion = axios.put(
-      `/usuarios/${profileUser.id}`,
+      `/api/usuarios/${profileUser.id}`,
       payload,
       { withCredentials: true },
     );
