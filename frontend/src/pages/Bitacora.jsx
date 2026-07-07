@@ -25,7 +25,7 @@ export default function Bitacora() {
   useEffect(() => {
     const fetchBitacora = async () => {
       try {
-        const response = await axios.get("http://localhost:3001/api/bitacora", {
+        const response = await axios.get("/api/bitacora", {
           withCredentials: true,
         });
         setBitacora(Array.isArray(response.data) ? response.data : []);
@@ -38,7 +38,7 @@ export default function Bitacora() {
     // 2. NUEVA FUNCIÓN: Para obtener las sedes
     const fetchSedes = async () => {
       try {
-        const response = await axios.get("http://localhost:3001/api/sede", {
+        const response = await axios.get("/api/sede", {
           withCredentials: true, // Agregado por si tu API requiere autenticación
         });
         setSedesOpciones(Array.isArray(response.data) ? response.data : []);

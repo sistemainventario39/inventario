@@ -17,7 +17,6 @@ import {
 } from "recharts";
 import { FiDatabase, FiAlertCircle, FiCheckCircle } from "react-icons/fi";
 
-const API_BASE = "http://localhost:3001/api";
 const COLORS = ["#10b981", "#ef4444"]; // Verde (Bueno), Rojo (Dañado)
 
 export default function Dashboard() {
@@ -33,7 +32,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await axios.get(`${API_BASE}/estadisticas`, {
+        const response = await axios.get(`/estadisticas`, {
           withCredentials: true,
         });
 

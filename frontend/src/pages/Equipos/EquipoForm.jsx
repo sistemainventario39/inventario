@@ -64,7 +64,7 @@ export default function EquipoForm({
         try {
           // NOTA: Esta API debe ser creada en el backend (Punto 9)
           const res = await axios.get(
-            "http://localhost:3001/api/equipos/lista",
+            "/api/equipos/lista",
           );
           setEquiposList(res.data);
         } catch (error) {
@@ -157,7 +157,7 @@ export default function EquipoForm({
 
     try {
       const response = await axios.get(
-        `http://localhost:3001/api/${dispositivo}/${encodeURIComponent(serialValue)}`,
+        `/api/${dispositivo}/${encodeURIComponent(serialValue)}`,
       );
 
       if (response.data.length > 0) {
@@ -193,7 +193,7 @@ export default function EquipoForm({
 
     try {
       const response = await axios.get(
-        `http://localhost:3001/api/verificar-periferico/${dispositivo}/${encodeURIComponent(serialValue)}`,
+        `/api/verificar-periferico/${dispositivo}/${encodeURIComponent(serialValue)}`,
       );
       const resultado = response.data;
       setSearchMessages((prev) => ({

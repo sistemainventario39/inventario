@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const comprobarSesion = async () => {
       try {
-        const response = await Axios.get("http://localhost:3001/api/me", {
+        const response = await Axios.get("/api/me", {
           withCredentials: true, // <--- ¡Vital para que envíe la cookie "acceso_token"!
         });
 

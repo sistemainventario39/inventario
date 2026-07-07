@@ -6,7 +6,6 @@ import axios from "axios";
 import {toast} from "react-hot-toast";
 import {FiEye, FiEyeOff} from "react-icons/fi";
 
-const API_URL = "http://localhost:3001/api";
 
 export default function NuevaPassword() {
   const navigate = useNavigate();
@@ -30,7 +29,7 @@ export default function NuevaPassword() {
 
     const validarToken = async () => {
       try {
-        const response = await axios.get(`${API_URL}/validar-token`, {
+        const response = await axios.get(`/validar-token`, {
           params: { token },
         });
         setTokenValid(response.data.valid === true);
@@ -59,7 +58,7 @@ export default function NuevaPassword() {
 
     setLoading(true);
 
-    const peticionRestablecer = axios.post(`${API_URL}/restablecer-password`, { token, password });
+    const peticionRestablecer = axios.post(`/restablecer-password`, { token, password });
     toast.promise(peticionRestablecer, {
       loading: "Actualizando contraseña...",
       success: (response) => {

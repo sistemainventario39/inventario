@@ -20,7 +20,7 @@ export default function Login() {
 
     try {
       const response = await Axios.post(
-        "http://localhost:3001/api/login",
+        "/api/login",
         {
           correo: formData.correo,
           password: formData.password,

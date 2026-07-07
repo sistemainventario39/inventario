@@ -139,9 +139,9 @@ export default function UserModal({
     };
 
     const peticionEdicion = axios.put(
-      `http://localhost:3001/api/usuarios/${user.id_usuario}`,
+      `/api/usuarios/${user.id_usuario}`,
       payload,
-      { withCredentials: true },
+      { withCredentials: true },  
     );
 
     toast.promise(peticionEdicion, {
@@ -162,7 +162,7 @@ export default function UserModal({
   // =========================
   const handleDelete = async () => {
     const peticionEliminacion = axios.put(
-      `http://localhost:3001/api/usuarios/eliminado/${user.id_usuario}`,
+      `/api/usuarios/eliminado/${user.id_usuario}`,
       { withCredentials: true },
     );
     toast.promise(peticionEliminacion, {

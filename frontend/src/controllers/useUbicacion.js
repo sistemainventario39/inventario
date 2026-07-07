@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-const API_BASE = "http://localhost:3001/api";
 
 export function useUbicaciones({ regionActual, estadoActual }) {
   const [regionList, setRegionList] = useState([]);
@@ -11,7 +10,7 @@ export function useUbicaciones({ regionActual, estadoActual }) {
   useEffect(() => {
     const obtenerRegiones = async () => {
       try {
-        const response = await axios.get(`${API_BASE}/region`);
+        const response = await axios.get(`/region`);
         setRegionList(response.data);
       } catch (error) {
         console.error("Error obteniendo regiones:", error);
@@ -28,7 +27,7 @@ export function useUbicaciones({ regionActual, estadoActual }) {
       }
       try {
         const response = await axios.get(
-          `${API_BASE}/region/${regionActual}/estados`,
+          `/region/${regionActual}/estados`,
         );
         setEstadoList(response.data);
       } catch (error) {
@@ -47,7 +46,7 @@ export function useUbicaciones({ regionActual, estadoActual }) {
       }
       try {
         const response = await axios.get(
-          `${API_BASE}/estados/${estadoActual}/ciudades`,
+          `/estados/${estadoActual}/ciudades`,
         );
         setCiudadesList(response.data);
       } catch (error) {

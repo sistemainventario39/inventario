@@ -9,8 +9,6 @@ import { toast } from "react-hot-toast";
 import LocationSelector from "../components/ui/LocationSelector";
 import { availableIcons } from "../utils/avatars";
 
-const API_BASE = "http://localhost:3001/api";
-
 const inputClass = ({ hasError, isSuccess }) => `
   block w-full rounded-lg shadow-sm py-2 px-3 text-sm border transition-all duration-200 outline-none bg-white
   hover:border-gray-400
@@ -111,7 +109,7 @@ export default function Perfil() {
 
   const fetchProfile = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_BASE}/usuarios/me`, {
+      const response = await axios.get(`/usuarios/me`, {
         withCredentials: true,
       });
 
@@ -176,7 +174,7 @@ export default function Perfil() {
     };
 
     const peticion = axios.put(
-      `${API_BASE}/usuarios/${profileUser.id}`,
+      `/usuarios/${profileUser.id}`,
       payload,
       { withCredentials: true },
     );

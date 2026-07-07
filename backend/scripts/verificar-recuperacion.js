@@ -3,7 +3,7 @@ import pool from "../config/bd.js";
 import { getTransporter } from "../config/mailer.js";
 import { env } from "../config/env.js";
 
-const API = "http://localhost:3001/api";
+
 
 async function checkDatabase() {
   const [cols] = await pool.execute(
@@ -51,7 +51,7 @@ async function checkSmtp() {
 
 async function checkApi(email) {
   try {
-    const res = await fetch(`${API}/recuperar-password`, {
+    const res = await fetch(`/recuperar-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),

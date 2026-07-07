@@ -4,7 +4,6 @@ import { toast } from "react-hot-toast";
 import { FiDownload, FiFileText, FiGrid } from "react-icons/fi";
 import { normalize } from "../../../../backend/utils/inventory.helpers.js";
 
-const API_BASE = "http://localhost:3001/api";
 
 function dedupeTipos(tipos) {
   const vistos = new Set();
@@ -23,7 +22,7 @@ export default function ExportDownloadButton({ filters = {} }) {
   useEffect(() => {
     const fetchTipos = async () => {
       try {
-        const response = await axios.get(`${API_BASE}/export/tipos`, {
+        const response = await axios.get(`/export/tipos`, {
           withCredentials: true,
         });
         if (Array.isArray(response.data)) {
@@ -60,7 +59,7 @@ export default function ExportDownloadButton({ filters = {} }) {
         sedes: (filters.selectedLocations || []).join(","),
       };
 
-      const response = await axios.get(`${API_BASE}/export/descargar`, {
+      const response = await axios.get(`/export/descargar`, {
         params,
         withCredentials: true,
         responseType: "blob",

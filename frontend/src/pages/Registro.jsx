@@ -39,10 +39,10 @@ export default function Registro() {
     if (tipoDispositivo === "PC" || tipoDispositivo === "LAPTOP") {
       url =
         tipoDispositivo === "LAPTOP"
-          ? "http://localhost:3001/api/laptop"
-          : "http://localhost:3001/api/pc";
+          ? "/api/laptop"
+          : "/api/pc";
     } else {
-      url = `http://localhost:3001/api/perifericos/${formData.type}`;
+      url = `/api/perifericos/${formData.type}`;
     }
 
     const peticionRegistro = axios.post(url, payload, {

@@ -102,7 +102,7 @@ export default function EquiposModal({
 
         // 3. Ejecutamos la petición con la ruta e ID correctos
         const response = await axios.get(
-          `http://localhost:3001/api/${endpointReal}/${itemId}`,
+          `/api/${endpointReal}/${itemId}`,
         );
         console.log("RESPUESTA API", response.data);
         setDetalle(response.data);
@@ -177,9 +177,9 @@ export default function EquiposModal({
     let url = "";
 
     if (esEquipo) {
-      url = `http://localhost:3001/api/equipos/${itemId}`;
+      url = `/api/equipos/${itemId}`;
     } else {
-      url = `http://localhost:3001/api/perifericos/${formData.type}/${itemId}`;
+      url = `/api/perifericos/${formData.type}/${itemId}`;
     }
 
     toast
@@ -206,7 +206,7 @@ export default function EquiposModal({
     const itemId =
       item.id_equipo || item.id_periferico || item.id || item.itemId;
     const peticionEliminacion = axios.put(
-      `http://localhost:3001/api/${categoria}/eliminado/${itemId}`,
+      `/api/${categoria}/eliminado/${itemId}`,
     );
 
     toast.promise(peticionEliminacion, {

@@ -33,7 +33,7 @@ export default function Ubicacion() {
   const obtenerUbicaciones = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:3001/api/ubicaciones",
+        "/api/ubicaciones",
         { withCredentials: true },
       );
       setUbicaciones(Array.isArray(response.data) ? response.data : []);

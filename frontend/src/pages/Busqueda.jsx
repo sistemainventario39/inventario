@@ -79,7 +79,7 @@ export default function Busqueda() {
     const fetchEquipos = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3001/api/componentes",
+          "/api/componentes",
           { withCredentials: true },
         );
         if (Array.isArray(response.data)) {

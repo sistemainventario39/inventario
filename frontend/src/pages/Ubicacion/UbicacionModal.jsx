@@ -117,7 +117,7 @@ export default function UbicacionModal({ isOpen, onClose, onUbicacionCreada }) {
     }
 
     const peticion = axios.post(
-      "http://localhost:3001/api/ubicaciones",
+      "/api/ubicaciones",
       payload,
       { withCredentials: true },
     );

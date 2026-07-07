@@ -15,7 +15,7 @@ export default function LocationSelector({
     const obtenerUbicaciones = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3001/api/ubicaciones",
+          "/api/ubicaciones",
         );
         setUbicaciones(response.data);
         console.log(response.data);

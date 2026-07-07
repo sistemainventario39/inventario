@@ -5,7 +5,6 @@ import { CloseButton } from "../components/ui/button-close";
 import axios from "axios";
 import {toast} from "react-hot-toast";
 
-const API_URL = "http://localhost:3001/api";
 
 export default function RecuperarPassword() {
   const navigate = useNavigate();
@@ -18,7 +17,7 @@ export default function RecuperarPassword() {
     e.preventDefault();
     setLoading(true);
 
-    const peticionCorreo = axios.post(`${API_URL}/recuperar-password`, { email });
+    const peticionCorreo = axios.post(`/recuperar-password`, { email });
 
     toast.promise(peticionCorreo, {
       loading: "Enviando correo de recuperación...",

@@ -58,7 +58,7 @@ export default function Header() {
   const handleLogout = async () => {
     try {
       await Axios.post(
-        "http://localhost:3001/api/logout",
+        "/api/logout",
         {},
         { withCredentials: true },
       );

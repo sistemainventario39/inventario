@@ -130,7 +130,7 @@ export default function RegistroUsuarios() {
 
   const obtenerUsuarios = async () => {
     try {
-      const response = await axios.get("http://localhost:3001/api/usuarios", {
+      const response = await axios.get("/api/usuarios", {
         withCredentials: true,
       });
       setUsers(response.data);
@@ -187,7 +187,7 @@ export default function RegistroUsuarios() {
     };
 
     const peticionRegistro = axios.post(
-      "http://localhost:3001/api/usuarios",
+      "/api/usuarios",
       payload,
     );
 

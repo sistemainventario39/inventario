@@ -7,8 +7,6 @@ import { toast } from "react-hot-toast";
 import { ubicacionSchema } from "../../validators/ubicacionSchema";
 import { useUbicaciones, ALA_OPCIONES } from "../../controllers/useUbicacion";
 
-const API_BASE = "http://localhost:3001/api";
-
 const inputClass = ({ hasError, isSuccess }) => `
   block w-full rounded-lg shadow-sm py-2 px-3 text-sm border transition-all duration-200 outline-none bg-white
   hover:border-gray-400
@@ -28,7 +26,7 @@ const resolverNombre = (lista, id, campoId) => {
 };
 
 async function resolverIdsDesdeNombres(ubicacion) {
-  const regionesRes = await axios.get(`${API_BASE}/region`);
+  const regionesRes = await axios.get(`/region`);
   const regionItem = regionesRes.data.find(
     (r) => r.nombre === ubicacion.region,
   );
@@ -41,7 +39,7 @@ async function resolverIdsDesdeNombres(ubicacion) {
   }
 
   const estadosRes = await axios.get(
-    `${API_BASE}/region/${regionItem.id_region}/estados`,
+    `/region/${regionItem.id_region}/estados`,
   );
   const estadoItem = estadosRes.data.find((e) => e.nombre === ubicacion.estado);
 
@@ -54,7 +52,7 @@ async function resolverIdsDesdeNombres(ubicacion) {
   }
 
   const ciudadesRes = await axios.get(
-    `${API_BASE}/estados/${estadoItem.id_estado}/ciudades`,
+    `/estados/${estadoItem.id_estado}/ciudades`,
   );
   const ciudadItem = ciudadesRes.data.find(
     (c) => c.nombre === ubicacion.ciudad,
@@ -266,7 +264,7 @@ export default function UbicacionActionModal({
       const cargarFormulario = async () => {
         try {
           const respuesta = await axios.get(
-            `${API_BASE}/ubicaciones/${ubicacion.id}`,
+            `/ubicaciones/${ubicacion.id}`,
           );
           const ubiCompleta = respuesta.data;
 
@@ -387,7 +385,7 @@ export default function UbicacionActionModal({
 
     // 3. Envío de datos por Axios
     const peticion = axios.put(
-      `${API_BASE}/ubicaciones/${ubicacion.id}`,
+      `/ubicaciones/${ubicacion.id}`,
       payload,
       { withCredentials: true },
     );
@@ -405,7 +403,7 @@ export default function UbicacionActionModal({
   };
   const handleDelete = async () => {
     const peticion = axios.put(
-      `${API_BASE}/ubicaciones/eliminadas/${ubicacion.id}`,
+      `/ubicaciones/eliminadas/${ubicacion.id}`,
       {}, // Segundo argumento: Cuerpo de la petición vacío
       { withCredentials: true }, // Tercer argumento: Configuración correcta de Axios
     );
