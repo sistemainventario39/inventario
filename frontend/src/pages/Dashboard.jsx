@@ -32,7 +32,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await axios.get(`/estadisticas`, {
+        const response = await axios.get(`/api/estadisticas`, {
           withCredentials: true,
         });
 
