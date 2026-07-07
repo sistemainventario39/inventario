@@ -22,7 +22,7 @@ export default function ExportDownloadButton({ filters = {} }) {
   useEffect(() => {
     const fetchTipos = async () => {
       try {
-        const response = await axios.get(`/export/tipos`, {
+        const response = await axios.get(`/api/export/tipos`, {
           withCredentials: true,
         });
         if (Array.isArray(response.data)) {
@@ -59,7 +59,7 @@ export default function ExportDownloadButton({ filters = {} }) {
         sedes: (filters.selectedLocations || []).join(","),
       };
 
-      const response = await axios.get(`/export/descargar`, {
+      const response = await axios.get(`/api/export/descargar`, {
         params,
         withCredentials: true,
         responseType: "blob",
