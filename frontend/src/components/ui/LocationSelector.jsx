@@ -5,6 +5,7 @@ export default function LocationSelector({
   setFormData,
   typePrefix,
   formData,
+  disabled = false,
 }) {
   const [ubicaciones, setUbicaciones] = useState([]);
   const [busqueda, setBusqueda] = useState("");
@@ -123,15 +124,24 @@ export default function LocationSelector({
         <div className="relative flex items-center">
           <input
             type="text"
-            className="w-full bg-white border border-gray-300 rounded-lg py-3 px-4 pr-10 outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-800 shadow-sm"
+            disabled={disabled}
+            className={`w-full border border-gray-300 rounded-lg py-3 px-4 pr-10 outline-none font-medium shadow-sm ${
+              disabled
+                ? "bg-gray-100 text-gray-600 cursor-not-allowed"
+                : "bg-white text-gray-800 focus:ring-2 focus:ring-blue-500"
+            }`}
             placeholder="Buscar por Sede o Ciudad..."
             value={busqueda}
             onChange={(e) => {
+              if (disabled) return;
               setBusqueda(e.target.value);
               setMostrarDropdown(true);
             }}
-            onFocus={() => setMostrarDropdown(true)}
+            onFocus={() => {
+              if (!disabled) setMostrarDropdown(true);
+            }}
             onKeyDown={(e) => {
+              if (disabled) return;
               if (
                 (e.key === "Backspace" || e.key === "Delete") &&
                 busqueda.length > 0
@@ -159,7 +169,7 @@ export default function LocationSelector({
         </div>
 
         {/* Dropdown de opciones filtradas */}
-        {mostrarDropdown && (
+        {mostrarDropdown && !disabled && (
           <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto divide-y divide-gray-100">
             {ubicacionesFiltradas.length > 0 ? (
               ubicacionesFiltradas.map((ubi, index) => {

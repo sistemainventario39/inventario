@@ -9,9 +9,9 @@ import { toast } from "react-hot-toast";
 import LocationSelector from "../components/ui/LocationSelector";
 import { availableIcons } from "../utils/avatars";
 
-const inputClass = ({ hasError, isSuccess }) => `
-  block w-full rounded-lg shadow-sm py-2 px-3 text-sm border transition-all duration-200 outline-none bg-white
-  hover:border-gray-400
+const inputClass = ({ hasError, isSuccess, disabled }) => `
+  block w-full rounded-lg shadow-sm py-2 px-3 text-sm border transition-all duration-200 outline-none
+  ${disabled ? "bg-gray-100 text-gray-600 cursor-not-allowed" : "bg-white hover:border-gray-400"}
   ${
     hasError
       ? "border-red-400 focus:ring-2 focus:ring-red-200 focus:border-red-500 placeholder-red-300"
@@ -136,12 +136,19 @@ export default function Perfil() {
     }
   }, [formValues.piso, clearErrors]);
 
-  const getFieldProps = (name) => {
+  const camposBloqueados = true;
+
+  const getFieldProps = (name, { editable = false } = {}) => {
     const state = getFieldState(name);
+    const locked = camposBloqueados && !editable;
+    const isDisabled = locked || loadingProfile;
     return {
+      disabled: isDisabled,
+      readOnly: locked && editable === false,
       className: inputClass({
         hasError: state.invalid,
         isSuccess: state.isDirty && !state.invalid,
+        disabled: isDisabled,
       }),
       error: state.invalid ? errors[name]?.message : null,
     };
@@ -156,22 +163,41 @@ export default function Perfil() {
     localStorage.setItem("selectedAvatarId", selectedIconId);
     window.dispatchEvent(new Event("avatarUpdated"));
 
-    const payload = {
-      cedula: data.cedula,
-      nombre: data.nombre,
-      apellido: data.apellido,
-      correo: data.email,
-      telefono: data.telefono,
-      username: data.usuario,
-      password: data.password,
-      rol: data.rol,
-      region: String(data.region) || null,
-      estado: String(data.estado) || null,
-      ciudad: String(data.city) || null,
-      sede: String(data.sede) || null,
-      piso: String(data.piso) || null,
-      alas: String(data.ala || ""),
-    };
+    const ubi = profileUser.ubicacion || {};
+
+    const payload = camposBloqueados
+      ? {
+          cedula: profileUser.cedula,
+          nombre: profileUser.nombre,
+          apellido: profileUser.apellido,
+          correo: profileUser.correo,
+          telefono: profileUser.telefono,
+          username: profileUser.username,
+          password: data.password,
+          rol: profileUser.rol,
+          region: ubi.region ? String(ubi.region) : null,
+          estado: ubi.estado ? String(ubi.estado) : null,
+          ciudad: ubi.ciudad ? String(ubi.ciudad) : null,
+          sede: ubi.sede ? String(ubi.sede) : null,
+          piso: ubi.piso ? String(ubi.piso) : null,
+          alas: ubi.ala ? String(ubi.ala) : "",
+        }
+      : {
+          cedula: data.cedula,
+          nombre: data.nombre,
+          apellido: data.apellido,
+          correo: data.email,
+          telefono: data.telefono,
+          username: data.usuario,
+          password: data.password,
+          rol: data.rol,
+          region: String(data.region) || null,
+          estado: String(data.estado) || null,
+          ciudad: String(data.city) || null,
+          sede: String(data.sede) || null,
+          piso: String(data.piso) || null,
+          alas: String(data.ala || ""),
+        };
 
     const peticion = axios.put(
       `/api/usuarios/${profileUser.id}`,
@@ -327,7 +353,7 @@ export default function Perfil() {
                   <input
                     type="text"
                     placeholder="V-12345678"
-                    disabled={loadingProfile}
+                    {...getFieldProps("cedula")}
                     {...register("cedula", {
                       onChange: (e) => {
                         const nums = e.target.value
@@ -341,7 +367,6 @@ export default function Perfil() {
                         message: "La cédula debe tener el formato V-12345678",
                       },
                     })}
-                    className={getFieldProps("cedula").className}
                   />
                   {getFieldProps("cedula").error && (
                     <p className="text-xs text-red-600 mt-1">
@@ -357,9 +382,8 @@ export default function Perfil() {
                   <input
                     type="text"
                     placeholder="Nombre"
-                    disabled={loadingProfile}
+                    {...getFieldProps("nombre")}
                     {...register("nombre")}
-                    className={getFieldProps("nombre").className}
                   />
                   {getFieldProps("nombre").error && (
                     <p className="text-xs text-red-600 mt-1">
@@ -375,9 +399,8 @@ export default function Perfil() {
                   <input
                     type="text"
                     placeholder="Apellido"
-                    disabled={loadingProfile}
+                    {...getFieldProps("apellido")}
                     {...register("apellido")}
-                    className={getFieldProps("apellido").className}
                   />
                   {getFieldProps("apellido").error && (
                     <p className="text-xs text-red-600 mt-1">
@@ -393,9 +416,8 @@ export default function Perfil() {
                   <input
                     type="text"
                     placeholder="04XX-XXXXXXX"
-                    disabled={loadingProfile}
+                    {...getFieldProps("telefono")}
                     {...register("telefono")}
-                    className={getFieldProps("telefono").className}
                   />
                   {getFieldProps("telefono").error && (
                     <p className="text-xs text-red-600 mt-1">
@@ -411,9 +433,8 @@ export default function Perfil() {
                   <input
                     type="text"
                     placeholder="Usuario"
-                    disabled={loadingProfile}
+                    {...getFieldProps("usuario")}
                     {...register("usuario")}
-                    className={getFieldProps("usuario").className}
                   />
                   {getFieldProps("usuario").error && (
                     <p className="text-xs text-red-600 mt-1">
@@ -427,9 +448,8 @@ export default function Perfil() {
                     Rol <span className="text-red-500">*</span>
                   </label>
                   <select
-                    disabled={loadingProfile}
+                    {...getFieldProps("rol")}
                     {...register("rol")}
-                    className={getFieldProps("rol").className}
                   >
                     <option value="" disabled>
                       -- Selecciona --
@@ -454,9 +474,8 @@ export default function Perfil() {
                   <input
                     type="email"
                     placeholder="nombre.apellido@cantv.com"
-                    disabled={loadingProfile}
+                    {...getFieldProps("email")}
                     {...register("email")}
-                    className={getFieldProps("email").className}
                   />
                   {getFieldProps("email").error && (
                     <p className="text-xs text-red-600 mt-1">
@@ -473,9 +492,8 @@ export default function Perfil() {
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="Dejar vacío para no cambiar"
-                    disabled={loadingProfile}
+                    {...getFieldProps("password", { editable: true })}
                     {...register("password")}
-                    className={getFieldProps("password").className}
                   />
                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                     <button
@@ -524,6 +542,7 @@ export default function Perfil() {
                     onKeyDown={handleKeyDown}
                     handleDefaultLocation={handleDefaultLocation}
                     typePrefix=""
+                    disabled={camposBloqueados}
                   />
 
                   {(errors.region ||

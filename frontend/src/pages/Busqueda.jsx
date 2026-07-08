@@ -22,11 +22,18 @@ export default function Busqueda() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeDropdown, setActiveDropdown] = useState(null);
 
-  // Estados de filtros múltiples
+  // Estados de filtros múltiples (selección en el panel)
   const [selectedStatuses, setSelectedStatuses] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [selectedModels, setSelectedModels] = useState([]);
   const [selectedLocations, setSelectedLocations] = useState([]);
+
+  // Filtros aplicados (los que realmente filtran la tabla)
+  const [appliedStatuses, setAppliedStatuses] = useState([]);
+  const [appliedTypes, setAppliedTypes] = useState([]);
+  const [appliedModels, setAppliedModels] = useState([]);
+  const [appliedLocations, setAppliedLocations] = useState([]);
+  const [showAppliedFilters, setShowAppliedFilters] = useState(false);
 
   // Estados para la paginación
   const [currentPage, setCurrentPage] = useState(1);
@@ -101,10 +108,10 @@ export default function Busqueda() {
     setCurrentPage(1);
   }, [
     searchTerm,
-    selectedStatuses,
-    selectedTypes,
-    selectedModels,
-    selectedLocations,
+    appliedStatuses,
+    appliedTypes,
+    appliedModels,
+    appliedLocations,
   ]);
 
   const handleCheckboxChange = (value, currentList, setList) => {
@@ -114,6 +121,27 @@ export default function Busqueda() {
       setList([...currentList, value]);
     }
   };
+
+  const handleApplyFilters = () => {
+    setAppliedStatuses([...selectedStatuses]);
+    setAppliedTypes([...selectedTypes]);
+    setAppliedModels([...selectedModels]);
+    setAppliedLocations([...selectedLocations]);
+    setShowAppliedFilters(true);
+  };
+
+  const hasAppliedFilters =
+    appliedStatuses.length > 0 ||
+    appliedTypes.length > 0 ||
+    appliedModels.length > 0 ||
+    appliedLocations.length > 0;
+
+  const appliedFilterTags = [
+    ...appliedStatuses.map((value) => ({ label: "Estado", value })),
+    ...appliedTypes.map((value) => ({ label: "Componente", value })),
+    ...appliedModels.map((value) => ({ label: "Modelo", value })),
+    ...appliedLocations.map((value) => ({ label: "Ubicación", value })),
+  ];
 
   const toggleDropdown = (id) => {
     setActiveDropdown(activeDropdown === id ? null : id);
@@ -132,13 +160,13 @@ export default function Busqueda() {
       safeSerial.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      selectedStatuses.length === 0 || selectedStatuses.includes(item.estado);
+      appliedStatuses.length === 0 || appliedStatuses.includes(item.estado);
     const matchesType =
-      selectedTypes.length === 0 || selectedTypes.includes(item.tipo);
+      appliedTypes.length === 0 || appliedTypes.includes(item.tipo);
     const matchesModel =
-      selectedModels.length === 0 || selectedModels.includes(item.modelo);
+      appliedModels.length === 0 || appliedModels.includes(item.modelo);
     const matchesLocation =
-      selectedLocations.length === 0 || selectedLocations.includes(item.sede);
+      appliedLocations.length === 0 || appliedLocations.includes(item.sede);
 
     return (
       matchesSearch &&
@@ -180,10 +208,10 @@ export default function Busqueda() {
 
   const exportFilters = {
     searchTerm,
-    selectedStatuses,
-    selectedTypes,
-    selectedModels,
-    selectedLocations,
+    selectedStatuses: appliedStatuses,
+    selectedTypes: appliedTypes,
+    selectedModels: appliedModels,
+    selectedLocations: appliedLocations,
   };
 
   return (
@@ -388,7 +416,43 @@ export default function Busqueda() {
                 </div>
               </div>
             </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handleApplyFilters}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-all duration-200"
+              >
+                Aplicar filtros
+              </button>
+            </div>
           </div>
+
+          {showAppliedFilters && (
+            <div className="mt-4 pt-4 border-t border-slate-100">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+                Filtros aplicados
+              </p>
+              {hasAppliedFilters ? (
+                <div className="flex flex-wrap gap-2">
+                  {appliedFilterTags.map((tag) => (
+                    <span
+                      key={`${tag.label}-${tag.value}`}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100"
+                    >
+                      <span className="text-blue-500">{tag.label}:</span>
+                      {tag.value}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500">
+                  No hay filtros seleccionados. Marca opciones y pulsa
+                  &quot;Aplicar filtros&quot;.
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* TABLA RESPONSIVA CON PAGINACIÓN */}
