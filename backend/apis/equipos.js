@@ -592,23 +592,25 @@ Router.put(
         // Ejecutar Remociones de Periféricos
         for (const item of perifericosActionMap.remove) {
           const ref = db.collection("perifericos").doc(item.id);
-          const snap = await tx.get(ref);
-          if (snap.exists) {
-            tx.update(ref, {
-              asignado: false,
+
+          tx.update(ref, {
+            asignado: false,
+            equipoId: null,
+            equipoSerial: null,
+            equipoRelacionado: null,
+          });
+
+          tx.update(
+            db
+              .collection(COL.indices)
+              .doc(serialIndexId("periferico", item.serial)),
+            {
               equipoId: null,
               equipoSerial: null,
-              equipoRelacionado: null,
-            });
-            tx.update(
-              db
-                .collection(COL.indices)
-                .doc(serialIndexId("periferico", item.serial)),
-              { equipoId: null, equipoSerial: null, tipoEquipo: null },
-            );
-          }
+              tipoEquipo: null,
+            }
+          );
         }
-
         // Ejecutar Adiciones de Periféricos
         for (const item of perifericosActionMap.add) {
           const ref = db.collection("perifericos").doc(item.id);
@@ -651,20 +653,17 @@ Router.put(
         // Mantener Periféricos existentes
         for (const item of perifericosActionMap.keep) {
           const ref = db.collection("perifericos").doc(item.id);
-          const snap = await tx.get(ref);
-          if (snap.exists) {
-            tx.update(ref, {
-              equipoSerial: equipoRelacionadoSync.serial,
-              equipoRelacionado: equipoRelacionadoSync,
-            });
-            finalPerifericosArray.push({
-              id: item.id,
-              ...item.data,
-              equipoId,
-              equipoSerial: equipoRelacionadoSync.serial,
-              equipoRelacionado: equipoRelacionadoSync,
-            });
-          }
+          tx.update(ref, {
+            equipoSerial: equipoRelacionadoSync.serial,
+            equipoRelacionado: equipoRelacionadoSync,
+          });
+          finalPerifericosArray.push({
+            id: item.id,
+            ...item.data,
+            equipoId,
+            equipoSerial: equipoRelacionadoSync.serial,
+            equipoRelacionado: equipoRelacionadoSync,
+          });
         }
 
         // --- FUSIÓN DE COMPONENTES ---
