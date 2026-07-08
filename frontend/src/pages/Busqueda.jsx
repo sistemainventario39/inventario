@@ -128,6 +128,19 @@ export default function Busqueda() {
     setAppliedModels([...selectedModels]);
     setAppliedLocations([...selectedLocations]);
     setShowAppliedFilters(true);
+    setShowFilters(false);
+  };
+
+  const handleClearFilters = () => {
+    setSelectedStatuses([]);
+    setSelectedTypes([]);
+    setSelectedModels([]);
+    setSelectedLocations([]);
+    setAppliedStatuses([]);
+    setAppliedTypes([]);
+    setAppliedModels([]);
+    setAppliedLocations([]);
+    setShowAppliedFilters(false);
   };
 
   const hasAppliedFilters =
@@ -135,6 +148,14 @@ export default function Busqueda() {
     appliedTypes.length > 0 ||
     appliedModels.length > 0 ||
     appliedLocations.length > 0;
+
+  const hasPendingFilters =
+    selectedStatuses.length > 0 ||
+    selectedTypes.length > 0 ||
+    selectedModels.length > 0 ||
+    selectedLocations.length > 0;
+
+  const hasAnyFilters = hasAppliedFilters || hasPendingFilters || showAppliedFilters;
 
   const appliedFilterTags = [
     ...appliedStatuses.map((value) => ({ label: "Estado", value })),
@@ -258,10 +279,11 @@ export default function Busqueda() {
               />
             </div>
 
-            {/* NUEVO: Botón para alternar filtros */}
+            {/* Botón para alternar filtros */}
             <button
+              type="button"
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center justify-center gap-2 px-5 py-3 border rounded-xl font-medium transition-all duration-200 sm:w-auto w-full ${
+              className={`flex items-center justify-center gap-2 px-5 py-3 border rounded-xl font-medium transition-all duration-200 sm:w-auto w-full shrink-0 ${
                 showFilters 
                   ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm" 
                   : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm"
@@ -270,6 +292,23 @@ export default function Busqueda() {
               <FiSliders className="w-4 h-4" />
               Filtros
               {showFilters ? <FiChevronUp className="w-4 h-4 ml-1" /> : <FiChevronDown className="w-4 h-4 ml-1" />}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleApplyFilters}
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-all duration-200 sm:w-auto w-full shrink-0"
+            >
+              Aplicar filtros
+            </button>
+
+            <button
+              type="button"
+              onClick={handleClearFilters}
+              disabled={!hasAnyFilters}
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold rounded-xl border border-slate-200 shadow-sm transition-all duration-200 sm:w-auto w-full shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Limpiar filtros
             </button>
           </div>
 
@@ -415,16 +454,6 @@ export default function Busqueda() {
                   })}
                 </div>
               </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={handleApplyFilters}
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-all duration-200"
-              >
-                Aplicar filtros
-              </button>
             </div>
           </div>
 

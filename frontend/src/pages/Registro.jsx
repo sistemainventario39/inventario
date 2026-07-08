@@ -9,10 +9,23 @@ import EquipoForm from "./Equipos/EquipoForm";
 import { defaultFormData } from "../utils/defaultFormData";
 import { buildPayload } from "../utils/buildPayload";
 
+const getInitialFormData = () => ({
+  ...defaultFormData,
+  acquisitionDate: new Date(),
+  ramList: [{ capacity: "", status: "Bueno" }],
+  storageList: [{ capacity: "", status: "Bueno" }],
+});
+
 export default function Registro() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState(defaultFormData);
+  const [formData, setFormData] = useState(getInitialFormData);
+  const [formKey, setFormKey] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const resetForm = () => {
+    setFormData(getInitialFormData());
+    setFormKey((prev) => prev + 1);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,7 +66,7 @@ export default function Registro() {
       .promise(peticionRegistro, {
         loading: "Registrando equipo...",
         success: (response) => {
-          setTimeout(() => navigate("/registro"), 3000);
+          resetForm();
           return response.data.message || "Equipo registrado exitosamente.";
         },
         error: (err) =>
@@ -84,6 +97,7 @@ export default function Registro() {
             </p>
           </div>
           <EquipoForm
+            key={formKey}
             formData={formData}
             setFormData={setFormData}
             onSubmit={handleSubmit}
