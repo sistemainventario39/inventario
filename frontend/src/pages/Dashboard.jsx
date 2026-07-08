@@ -15,9 +15,14 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { FiDatabase, FiAlertCircle, FiCheckCircle } from "react-icons/fi";
+import {
+  FiDatabase,
+  FiAlertCircle,
+  FiCheckCircle,
+  FiPackage,
+} from "react-icons/fi";
 
-const COLORS = ["#10b981", "#ef4444"]; // Verde (Bueno), Rojo (Dañado)
+const COLORS = ["#10b981", "#ef4444", "#3b82f6"]; // Verde (Bueno), Rojo (Dañado), Azul (Repuesto)
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
@@ -25,6 +30,7 @@ export default function Dashboard() {
     total: 0,
     bueno: 0,
     danado: 0,
+    repuesto: 0,
   });
   const [hardwareData, setHardwareData] = useState([]);
   const [statusData, setStatusData] = useState([]);
@@ -75,13 +81,13 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Tarjetas de Métricas (Ajustadas a 3 columnas para los 2 estados) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Tarjetas de Métricas */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           {/* Total */}
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500 mb-1">
-                Total Componentes
+                Total Activos
               </p>
               <h3 className="text-3xl font-bold text-gray-900">
                 {metrics.total}
@@ -119,6 +125,21 @@ export default function Dashboard() {
             </div>
             <div className="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center">
               <FiAlertCircle className="w-6 h-6 text-red-600" />
+            </div>
+          </div>
+
+          {/* Estado: Repuesto */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-1">
+                Repuestos
+              </p>
+              <h3 className="text-3xl font-bold text-blue-600">
+                {metrics.repuesto}
+              </h3>
+            </div>
+            <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+              <FiPackage className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
@@ -184,7 +205,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Gráfica de Dona (Ahora con 2 Estados) */}
+          {/* Gráfica de Dona */}
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
             <h3 className="text-lg font-bold text-gray-900 mb-6">
               Estado General del Inventario

@@ -10,6 +10,43 @@ export const normalize = (value = "") =>
 export const sha1 = (value) =>
   crypto.createHash("sha1").update(String(value)).digest("hex");
 
+export const normalizeStatus = (value = "") => {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "Bueno";
+
+  const normalized = normalize(raw);
+
+  if (
+    ["bueno", "operativo", "funciona", "funcional", "disponible"].includes(
+      normalized,
+    )
+  ) {
+    return "Bueno";
+  }
+
+  if (
+    [
+      "danado",
+      "dañado",
+      "defectuoso",
+      "falla",
+      "fallado",
+      "reparacion",
+      "reparación",
+      "inoperativo",
+      "inoperable",
+    ].includes(normalized)
+  ) {
+    return "Dañado";
+  }
+
+  if (["repuesto", "respuesto", "spare", "de repuesto"].includes(normalized)) {
+    return "Repuesto";
+  }
+
+  return raw;
+};
+
 export function badRequest(message) {
   const err = new Error(message);
   err.statusCode = 400;

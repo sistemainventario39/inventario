@@ -101,9 +101,7 @@ export default function EquiposModal({
         }
 
         // 3. Ejecutamos la petición con la ruta e ID correctos
-        const response = await axios.get(
-          `/api/${endpointReal}/${itemId}`,
-        );
+        const response = await axios.get(`/api/${endpointReal}/${itemId}`);
         console.log("RESPUESTA API", response.data);
         setDetalle(response.data);
 
@@ -226,6 +224,16 @@ export default function EquiposModal({
   // =========================
   const targetData = type === "view" ? detalle || item : item;
 
+  const getStatusStyles = (value) => {
+    if (value === "Bueno" || value === "Operativo") {
+      return "bg-green-100 text-green-700";
+    }
+    if (value === "Repuesto") {
+      return "bg-blue-100 text-blue-700";
+    }
+    return "bg-red-100 text-red-600";
+  };
+
   // Extraemos dinámicamente priorizando la asignación
   const locActual =
     targetData?.asignacion || targetData?.ubicacion || targetData;
@@ -347,7 +355,9 @@ export default function EquiposModal({
                               detalle.estado === "Bueno" ||
                               detalle.estado === "Operativo"
                                 ? "text-green-600"
-                                : "text-red-500"
+                                : detalle.estado === "Repuesto"
+                                  ? "text-blue-600"
+                                  : "text-red-500"
                             }`}
                           >
                             {detalle.estado}
@@ -437,11 +447,7 @@ export default function EquiposModal({
                                     </span>
                                   )}
                                   <span
-                                    className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${
-                                      comp.estado === "Bueno"
-                                        ? "bg-green-100 text-green-700"
-                                        : "bg-yellow-100 text-yellow-700"
-                                    }`}
+                                    className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${getStatusStyles(comp.estado)}`}
                                   >
                                     {comp.estado}
                                   </span>
@@ -484,12 +490,7 @@ export default function EquiposModal({
                                   </p>
                                 </div>
                                 <span
-                                  className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                                    peri.estado === "Bueno" ||
-                                    peri.estado === "Operativo"
-                                      ? "bg-green-100 text-green-700"
-                                      : "bg-red-100 text-red-600"
-                                  }`}
+                                  className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${getStatusStyles(peri.estado)}`}
                                 >
                                   {peri.estado}
                                 </span>

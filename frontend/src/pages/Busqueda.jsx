@@ -13,7 +13,7 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiChevronDown,
-  FiChevronUp
+  FiChevronUp,
 } from "react-icons/fi";
 import { EqualIcon } from "lucide-react";
 
@@ -85,10 +85,9 @@ export default function Busqueda() {
   useEffect(() => {
     const fetchEquipos = async () => {
       try {
-        const response = await axios.get(
-          "/api/componentes",
-          { withCredentials: true },
-        );
+        const response = await axios.get("/api/componentes", {
+          withCredentials: true,
+        });
         if (Array.isArray(response.data)) {
           setEquipos(response.data);
         } else {
@@ -155,7 +154,8 @@ export default function Busqueda() {
     selectedModels.length > 0 ||
     selectedLocations.length > 0;
 
-  const hasAnyFilters = hasAppliedFilters || hasPendingFilters || showAppliedFilters;
+  const hasAnyFilters =
+    hasAppliedFilters || hasPendingFilters || showAppliedFilters;
 
   const appliedFilterTags = [
     ...appliedStatuses.map((value) => ({ label: "Estado", value })),
@@ -214,17 +214,17 @@ export default function Busqueda() {
   };
 
   const options = {
-    statuses: ["Bueno", "Defectuoso"],
+    statuses: ["Bueno", "Dañado", "Repuesto"],
     types: dedupeByKey(
       equipos.map((item) => item.tipo).filter(Boolean),
       (tipo) => tipo.trim().toLowerCase(),
     ).sort((a, b) => a.localeCompare(b, "es")),
-    models: [...new Set(equipos.map((item) => item.modelo).filter(Boolean))].sort(
-      (a, b) => a.localeCompare(b, "es"),
-    ),
-    locations: [...new Set(equipos.map((item) => item.sede).filter(Boolean))].sort(
-      (a, b) => a.localeCompare(b, "es"),
-    ),
+    models: [
+      ...new Set(equipos.map((item) => item.modelo).filter(Boolean)),
+    ].sort((a, b) => a.localeCompare(b, "es")),
+    locations: [
+      ...new Set(equipos.map((item) => item.sede).filter(Boolean)),
+    ].sort((a, b) => a.localeCompare(b, "es")),
   };
 
   const exportFilters = {
@@ -263,7 +263,6 @@ export default function Busqueda() {
 
         {/* CONTENEDOR DE BÚSQUEDA Y FILTROS */}
         <div className="bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-sm p-6 mb-8 transition-all duration-300 hover:shadow-md">
-          
           {/* Fila del buscador y botón de filtros */}
           <div className="flex flex-col sm:flex-row gap-4 mb-2">
             <div className="relative flex-grow">
@@ -284,14 +283,18 @@ export default function Busqueda() {
               type="button"
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center justify-center gap-2 px-5 py-3 border rounded-xl font-medium transition-all duration-200 sm:w-auto w-full shrink-0 ${
-                showFilters 
-                  ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm" 
+                showFilters
+                  ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm"
                   : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm"
               }`}
             >
               <FiSliders className="w-4 h-4" />
               Filtros
-              {showFilters ? <FiChevronUp className="w-4 h-4 ml-1" /> : <FiChevronDown className="w-4 h-4 ml-1" />}
+              {showFilters ? (
+                <FiChevronUp className="w-4 h-4 ml-1" />
+              ) : (
+                <FiChevronDown className="w-4 h-4 ml-1" />
+              )}
             </button>
 
             <button
@@ -313,9 +316,11 @@ export default function Busqueda() {
           </div>
 
           {/* NUEVO: Contenedor colapsable de Filtros (El "Acordeón") */}
-          <div 
+          <div
             className={`transition-all duration-500 ease-in-out overflow-hidden ${
-              showFilters ? "max-h-[1200px] opacity-100 pt-6 mt-4 border-t border-slate-100" : "max-h-0 opacity-0 pt-0 mt-0 border-transparent"
+              showFilters
+                ? "max-h-[1200px] opacity-100 pt-6 mt-4 border-t border-slate-100"
+                : "max-h-0 opacity-0 pt-0 mt-0 border-transparent"
             }`}
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">

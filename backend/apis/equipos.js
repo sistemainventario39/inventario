@@ -9,6 +9,7 @@ import {
   normalize,
   badRequest,
   requireString,
+  normalizeStatus,
 } from "../utils/inventory.helpers.js";
 
 import {
@@ -51,7 +52,7 @@ function buildEquipoDoc(
     modelo: body.modelo.trim(),
     serial: body.serial.trim(),
     serialNorm: normalize(body.serial),
-    estado: body.estado.trim(),
+    estado: normalizeStatus(body.estado),
     notas: body.notas || null,
     fechaRegistro: new Date().toISOString(),
     procedencia,
@@ -608,7 +609,7 @@ Router.put(
               equipoId: null,
               equipoSerial: null,
               tipoEquipo: null,
-            }
+            },
           );
         }
         // Ejecutar Adiciones de Periféricos
@@ -690,7 +691,7 @@ Router.put(
           marca: equipoRelacionadoSync.marca,
           modelo: equipoRelacionadoSync.modelo,
           serial: equipoRelacionadoSync.serial,
-          estado: body.estado,
+          estado: normalizeStatus(body.estado),
           asignacion: asigData,
           componentes: finalComponentes,
           perifericosAnadidos: nombresPerifAnadidos,
@@ -704,7 +705,7 @@ Router.put(
           modelo: equipoRelacionadoSync.modelo,
           serial: equipoRelacionadoSync.serial,
           serialNorm: newSerialNorm,
-          estado: body.estado || current.estado,
+          estado: normalizeStatus(body.estado || current.estado),
           asignacion: asigData,
           componentes: finalComponentes,
           perifericos: finalPerifericosArray,

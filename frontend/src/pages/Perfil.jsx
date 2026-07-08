@@ -1,7 +1,16 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Header from "../components/layout/Header";
 import axios from "axios";
-import { FiMail, FiShield, FiEdit2, FiSave, FiX, FiUser, FiEye, FiEyeOff } from "react-icons/fi";
+import {
+  FiMail,
+  FiShield,
+  FiEdit2,
+  FiSave,
+  FiX,
+  FiUser,
+  FiEye,
+  FiEyeOff,
+} from "react-icons/fi";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { userSchema } from "../validators/userSchema";
@@ -43,7 +52,7 @@ function mapUserToForm(user) {
 
 export default function Perfil() {
   const [showIconSelector, setShowIconSelector] = useState(false);
-  const [selectedIconId, setSelectedIconId] = useState(()=> {
+  const [selectedIconId, setSelectedIconId] = useState(() => {
     const savedAvatar = localStorage.getItem("selectedAvatarId");
     return savedAvatar ? Number(savedAvatar) : 1;
   });
@@ -199,11 +208,9 @@ export default function Perfil() {
           alas: String(data.ala || ""),
         };
 
-    const peticion = axios.put(
-      `/api/usuarios/${profileUser.id}`,
-      payload,
-      { withCredentials: true },
-    );
+    const peticion = axios.put(`/api/usuarios/${profileUser.id}`, payload, {
+      withCredentials: true,
+    });
 
     toast.promise(peticion, {
       loading: "Guardando cambios...",
@@ -447,10 +454,7 @@ export default function Perfil() {
                   <label className="block text-sm font-bold text-black mb-2">
                     Rol <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    {...getFieldProps("rol")}
-                    {...register("rol")}
-                  >
+                  <select {...getFieldProps("rol")} {...register("rol")}>
                     <option value="" disabled>
                       -- Selecciona --
                     </option>
@@ -489,26 +493,26 @@ export default function Perfil() {
                     Contraseña
                   </label>
                   <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Dejar vacío para no cambiar"
-                    {...getFieldProps("password", { editable: true })}
-                    {...register("password")}
-                  />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
-                    >
-                    {showPassword ? (
-                    <FiEyeOff className="h-5 w-5" />
-                    ) : (
-                    <FiEye className="h-5 w-5" />
-                    )}
-                    </button>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Dejar vacío para no cambiar"
+                      {...getFieldProps("password", { editable: true })}
+                      {...register("password")}
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+                      >
+                        {showPassword ? (
+                          <FiEyeOff className="h-5 w-5" />
+                        ) : (
+                          <FiEye className="h-5 w-5" />
+                        )}
+                      </button>
+                    </div>
                   </div>
-                </div>
                   {getFieldProps("password").error && (
                     <p className="text-xs text-red-600 mt-1">
                       {getFieldProps("password").error}

@@ -3,6 +3,7 @@ import {
   badRequest,
   normalize,
   sha1,
+  normalizeStatus,
 } from "../utils/inventory.helpers.js";
 import {
   PERIFERICOS_MAP,
@@ -95,7 +96,7 @@ export function validateEquipoBody(body) {
     marca: marca.trim(),
     modelo: modelo.trim(),
     serial: serial.trim(),
-    estado: estado.trim(),
+    estado: normalizeStatus(estado),
     notas: notas ? String(notas).trim() : null,
     procedencia,
     asignacion,
@@ -132,7 +133,7 @@ export function normalizeComponent(component, index) {
     marca: component.marca ? String(component.marca).trim() : "Genérico",
     modelo: component.modelo ? String(component.modelo).trim() : "Genérico",
     serial,
-    estado,
+    estado: normalizeStatus(estado),
     notas: component.notas ? String(component.notas).trim() : null,
   };
 
@@ -176,7 +177,7 @@ export function normalizePeriferico(periferico, index) {
     marca: periferico.marca ? String(periferico.marca).trim() : "Genérico",
     modelo: periferico.modelo ? String(periferico.modelo).trim() : "Genérico",
     serial,
-    estado,
+    estado: normalizeStatus(estado),
     notas: periferico.notas ? String(periferico.notas).trim() : null,
   };
 }

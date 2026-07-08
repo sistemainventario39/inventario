@@ -33,9 +33,10 @@ Router.get("/estadisticas", verificarToken, async (req, res) => {
       ...perifericosSnap.docs.map((doc) => doc.data()),
     ];
 
-    // Variables para los 2 estados del sistema
+    // Variables para los 3 estados del sistema
     let bueno = 0;
     let danado = 0;
+    let repuesto = 0;
 
     // Objeto para agrupar por categoría/tipo
     const hardwareMap = {};
@@ -50,7 +51,7 @@ Router.get("/estadisticas", verificarToken, async (req, res) => {
       estadoRaw = estadoRaw.toLowerCase();
       let statusGroup = "Bueno"; // Estado por defecto
 
-      // Normalizamos cualquier variante a "Dañado"
+      // Normalizamos cualquier variante a "Dañado" o "Repuesto"
       if (
         ["dañado", "danado", "falla", "reparación", "reparacion"].includes(
           estadoRaw,
@@ -58,6 +59,11 @@ Router.get("/estadisticas", verificarToken, async (req, res) => {
       ) {
         statusGroup = "Dañado";
         danado++;
+      } else if (
+        ["repuesto", "respuesto", "spare", "de repuesto"].includes(estadoRaw)
+      ) {
+        statusGroup = "Repuesto";
+        repuesto++;
       } else {
         bueno++;
       }
@@ -82,10 +88,11 @@ Router.get("/estadisticas", verificarToken, async (req, res) => {
       (a, b) => b.total - a.total,
     );
 
-    // Datos estructurados para la gráfica de dona (2 secciones)
+    // Datos estructurados para la gráfica de dona (3 secciones)
     const statusData = [
       { name: "Bueno", value: bueno },
       { name: "Dañado", value: danado },
+      { name: "Repuesto", value: repuesto },
     ];
 
     return res.status(200).json({
@@ -93,6 +100,7 @@ Router.get("/estadisticas", verificarToken, async (req, res) => {
         total: todosLosItems.length,
         bueno,
         danado,
+        repuesto,
       },
       hardwareData,
       statusData,
