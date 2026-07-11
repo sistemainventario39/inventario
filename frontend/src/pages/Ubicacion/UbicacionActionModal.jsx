@@ -11,12 +11,11 @@ const inputClass = ({ hasError, isSuccess }) => `
   block w-full rounded-lg shadow-sm py-2 px-3 text-sm border transition-all duration-200 outline-none bg-white
   hover:border-gray-400
   disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed
-  ${
-    hasError
-      ? "border-red-400 focus:ring-2 focus:ring-red-200 focus:border-red-500"
-      : isSuccess
-        ? "border-green-400 focus:ring-2 focus:ring-green-200 focus:border-green-500"
-        : "border-gray-300 focus:ring-2 focus:ring-primary-200 focus:border-primary-500"
+  ${hasError
+    ? "border-red-400 focus:ring-2 focus:ring-red-200 focus:border-red-500"
+    : isSuccess
+      ? "border-green-400 focus:ring-2 focus:ring-green-200 focus:border-green-500"
+      : "border-gray-300 focus:ring-2 focus:ring-primary-200 focus:border-primary-500"
   }
 `;
 
@@ -26,13 +25,13 @@ const resolverNombre = (lista, id, campoId) => {
 };
 
 async function resolverIdsDesdeNombres(ubicacion) {
-  const regionesRes = await axios.get(`/api/region`);
+  const regionesRes = await axios.get(`/api/region`, {
+    withCredentials: true,
+  });
   const regionItem = regionesRes.data.find(
     (r) => r.nombre === ubicacion.region,
   );
 
-  console.debug("resolverIdsDesdeNombres - ubicacion.region", ubicacion.region);
-  console.debug("resolverIdsDesdeNombres - regionItem", regionItem);
 
   if (!regionItem) {
     return { region: "", estado: "", ciudad: "" };
@@ -57,9 +56,6 @@ async function resolverIdsDesdeNombres(ubicacion) {
   const ciudadItem = ciudadesRes.data.find(
     (c) => c.nombre === ubicacion.ciudad,
   );
-
-  console.debug("resolverIdsDesdeNombres - estadoItem", estadoItem);
-  console.debug("resolverIdsDesdeNombres - ciudadItem", ciudadItem);
 
   return {
     region: String(regionItem.id_region),
@@ -270,9 +266,6 @@ export default function UbicacionActionModal({
 
           const ids = await resolverIdsDesdeNombres(ubiCompleta);
 
-          console.debug("cargarFormulario - ids resueltos:", ids);
-          console.debug("cargarFormulario - ubiCompleta:", ubiCompleta);
-
           prevRegion.current = ids.region;
           prevEstado.current = ids.estado;
 
@@ -290,7 +283,6 @@ export default function UbicacionActionModal({
             estado: ids.estado,
             ciudad: ids.ciudad,
           });
-          console.log(prevRegion);
         } catch (error) {
           console.error("Error al cargar datos de edición:", error);
           toast.error("No se pudieron cargar los datos de la ubicación.");
@@ -321,13 +313,6 @@ export default function UbicacionActionModal({
   // cuando las listas dependientes (estadoList / ciudadesList) ya están cargadas.
   useEffect(() => {
     if (!valoresPendientes) return;
-
-    console.debug("aplicarValoresPendientes - pendientes:", valoresPendientes);
-    console.debug("aplicarValoresPendientes - listas lengths:", {
-      regionList: regionList.length,
-      estadoList: estadoList.length,
-      ciudadesList: ciudadesList.length,
-    });
 
     // Aplicar en orden: region -> estado -> ciudad
     // 1) Si tenemos región pendiente y las regiones ya llegaron, setValue region.
@@ -367,7 +352,6 @@ export default function UbicacionActionModal({
   };
 
   const onSubmitEdit = async (data) => {
-    // 1. Corrección de los nombres de los campos (campoId)
     const payload = {
       region: resolverNombre(regionList, data.region, "id_region"),
       estado: resolverNombre(estadoList, data.estado, "id_estado"),
@@ -377,7 +361,6 @@ export default function UbicacionActionModal({
       ala: data.ala || null,
     };
 
-    // 2. Si alguna resolución falla, se detiene
     if (!payload.region || !payload.estado || !payload.ciudad) {
       toast.error("Selecciona región, estado y ciudad válidos.");
       return;
