@@ -25,43 +25,72 @@ const resolverNombre = (lista, id, campoId) => {
 };
 
 async function resolverIdsDesdeNombres(ubicacion) {
-  const regionesRes = await axios.get(`/api/region`, {
-    withCredentials: true,
-  });
-  const regionItem = regionesRes.data.find(
-    (r) => r.nombre === ubicacion.region,
-  );
+  try {
+    // 1. Obtener Regiones
+    const regionesRes = await axios.get(`/api/region`, {
+      withCredentials: true,
+    });
+    
+    // Aseguramos que sea un array, previendo que la API de prod envuelva la data
+    const listaRegiones = Array.isArray(regionesRes.data) ? regionesRes.data : [];
+    
+    // Búsqueda insensible a mayúsculas y espacios
+    const regionItem = listaRegiones.find(
+      (r) => r.nombre && ubicacion.region && r.nombre.trim().toLowerCase() === ubicacion.region.trim().toLowerCase()
+    );
 
+    if (!regionItem) {
+      console.warn("No se encontró la región:", ubicacion.region);
+      return { region: "", estado: "", ciudad: "" };
+    }
 
-  if (!regionItem) {
+    // Compatibilidad: Toma id_region si existe, si no, toma 'id' genérico del documento
+    const idRegion = regionItem.id_region || regionItem.id;
+
+    // 2. Obtener Estados
+    const estadosRes = await axios.get(`/api/region/${idRegion}/estados`, {
+      withCredentials: true, // Añadido para consistencia si la API lo requiere
+    });
+    
+    const listaEstados = Array.isArray(estadosRes.data) ? estadosRes.data : [];
+    const estadoItem = listaEstados.find(
+      (e) => e.nombre && ubicacion.estado && e.nombre.trim().toLowerCase() === ubicacion.estado.trim().toLowerCase()
+    );
+
+    if (!estadoItem) {
+      console.warn("No se encontró el estado:", ubicacion.estado);
+      return {
+        region: String(idRegion),
+        estado: "",
+        ciudad: "",
+      };
+    }
+
+    const idEstado = estadoItem.id_estado || estadoItem.id;
+
+    // 3. Obtener Ciudades
+    const ciudadesRes = await axios.get(`/api/estados/${idEstado}/ciudades`, {
+      withCredentials: true,
+    });
+    
+    const listaCiudades = Array.isArray(ciudadesRes.data) ? ciudadesRes.data : [];
+    const ciudadItem = listaCiudades.find(
+      (c) => c.nombre && ubicacion.ciudad && c.nombre.trim().toLowerCase() === ubicacion.ciudad.trim().toLowerCase()
+    );
+
+    const idCiudad = ciudadItem ? (ciudadItem.id_ciudad || ciudadItem.id) : "";
+
+    return {
+      region: String(idRegion),
+      estado: String(idEstado),
+      ciudad: String(idCiudad),
+    };
+
+  } catch (error) {
+    // Manejo de errores para evitar que la UI se rompa si una API falla
+    console.error("Error resolviendo IDs de ubicación:", error);
     return { region: "", estado: "", ciudad: "" };
   }
-
-  const estadosRes = await axios.get(
-    `/api/region/${regionItem.id_region}/estados`,
-  );
-  const estadoItem = estadosRes.data.find((e) => e.nombre === ubicacion.estado);
-
-  if (!estadoItem) {
-    return {
-      region: String(regionItem.id_region),
-      estado: "",
-      ciudad: "",
-    };
-  }
-
-  const ciudadesRes = await axios.get(
-    `/api/estados/${estadoItem.id_estado}/ciudades`,
-  );
-  const ciudadItem = ciudadesRes.data.find(
-    (c) => c.nombre === ubicacion.ciudad,
-  );
-
-  return {
-    region: String(regionItem.id_region),
-    estado: String(estadoItem.id_estado),
-    ciudad: ciudadItem ? String(ciudadItem.id_ciudad) : "",
-  };
 }
 
 function UbicacionFormFields({
