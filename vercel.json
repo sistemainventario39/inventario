@@ -15,7 +15,7 @@
         "destination": { "service": "backend" }
       },
       {
-        "source": "/((?!api|_next|.*\\..*).*)",
+        "source": "/((?!api).*)",
         "destination": { "service": "frontend" }
       }
     ]
