@@ -611,7 +611,7 @@ export default function EquipoForm({
 
                 {/* Procesador */}
                 <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                  <div className="md:col-span-10">
+                  <div className="md:col-span-9">
                     <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
                       Procesador
                     </label>
@@ -632,7 +632,7 @@ export default function EquipoForm({
                       <option value="Intel Core i7">Intel Core i7</option>
                     </select>
                   </div>
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-3">
                     <StatusToggle
                       status={formData.processorStatus}
                       onStatusChange={(newStatus) =>

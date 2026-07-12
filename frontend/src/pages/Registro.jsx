@@ -37,8 +37,9 @@ export default function Registro() {
       if (error.errors) {
         toast.error(`Revisa el formulario: ${error.errors[0].message}`);
       } else {
+        // Capturamos con más seguridad el mensaje que viene del backend
         toast.error(
-          error.response?.data?.message || "Ocurrió un error al registrar.",
+          error.response?.data?.message || error.message || "Ocurrió un error de validación.",
         );
       }
       setIsSubmitting(false);
