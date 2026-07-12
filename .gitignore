@@ -1,8 +1,8 @@
 # Ignorar dependencias de Node
-backend/node_modules/
-frontend/node_modules/
+api/src/node_modules/
+src/node_modules/
 
 # Ignorar archivos de configuración sensible
 .env
-backend/.env
-frontend/.env
+api/.env
+src/.env

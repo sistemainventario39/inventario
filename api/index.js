@@ -1,16 +1,16 @@
 import "./config/env.js";
 import express from "express";
-import pool from "./config/bd.js";
-import { env } from "./config/env.js";
-import { getTransporter } from "./config/mailer.js";
-import perifericos from "./apis/perifericos.js";
-import ubicacion from "./apis/ubicacion.js";
+import pool from "../src/config/bd.js";
+import { env } from "../src/config/env.js";
+import { getTransporter } from "../src/config/mailer.js";
+import perifericos from "../src/apis/perifericos.js";
+import ubicacion from "../src/apis/ubicacion.js";
 import usuarios from "./apis/usuarios.js";
-import equipos from "./apis/equipos.js";
-import bitacora from "./apis/bitacora.js";
+import equipos from "../src/apis/equipos.js";
+import bitacora from "../src/apis/bitacora.js";
 import exportacion from "./apis/exportacion.js";
-import recuperarPassword from "./apis/recuperarPassword.js";
-import estadisticas from "./apis/estadisticas.js";
+import recuperarPassword from "../src/apis/recuperarPassword.js";
+import estadisticas from "../src/apis/estadisticas.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
