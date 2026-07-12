@@ -33,15 +33,33 @@ export default function Registro() {
 
     try {
       equipoSchema.parse(formData);
-    } catch (error) {
-      // Validamos que sea un error de Zod y que tenga el array con mensajes
-      if (error?.errors && Array.isArray(error.errors) && error.errors.length > 0) {
-        toast.error(`Falta un campo: ${error.errors[0].message}`);
+    } } catch (error) {
+      console.error("Error registrando equipo:", error);
+  
+      let mensajeError = "Error interno";
+  
+      // Si el error viene de Zod, suele tener la propiedad 'errors'
+      if (error.errors && Array.isArray(error.errors) && error.errors.length > 0) {
+        mensajeError = error.errors[0].message;
       } else {
-        toast.error(
-          error?.response?.data?.message || error?.message || "Ocurrió un error al registrar.",
-        );
+        // Si Zod ya convirtió el error en un string JSON en error.message, lo parseamos
+        try {
+          const parsedError = JSON.parse(error.message);
+          if (Array.isArray(parsedError) && parsedError[0]?.message) {
+            mensajeError = parsedError[0].message;
+          } else {
+            mensajeError = error.message;
+          }
+        } catch (e) {
+          // Si no es un JSON, es un error normal, usamos el string tal cual
+          mensajeError = error.message || "Ocurrió un error en el servidor.";
+        }
       }
+  
+      // Usamos 400 Bad Request por defecto si es error de validación
+      const status = error.statusCode || (error.errors ? 400 : 500);
+  
+      toast.error(mensajeError);
       setIsSubmitting(false);
       return;
     }
