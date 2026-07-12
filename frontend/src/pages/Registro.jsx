@@ -34,12 +34,12 @@ export default function Registro() {
     try {
       equipoSchema.parse(formData);
     } catch (error) {
-      if (error.errors) {
-        toast.error(`Revisa el formulario: ${error.errors[0].message}`);
+      // Validamos que sea un error de Zod y que tenga el array con mensajes
+      if (error?.errors && Array.isArray(error.errors) && error.errors.length > 0) {
+        toast.error(`Falta un campo: ${error.errors[0].message}`);
       } else {
-        // Capturamos con más seguridad el mensaje que viene del backend
         toast.error(
-          error.response?.data?.message || error.message || "Ocurrió un error de validación.",
+          error?.response?.data?.message || error?.message || "Ocurrió un error al registrar.",
         );
       }
       setIsSubmitting(false);
