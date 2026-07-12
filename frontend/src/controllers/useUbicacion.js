@@ -10,7 +10,7 @@ export function useUbicaciones({ regionActual, estadoActual }) {
   useEffect(() => {
     const obtenerRegiones = async () => {
       try {
-        const response = await axios.get(`/region`);
+        const response = await axios.get(`/api/region`);
         setRegionList(response.data);
       } catch (error) {
         console.error("Error obteniendo regiones:", error);
@@ -27,7 +27,7 @@ export function useUbicaciones({ regionActual, estadoActual }) {
       }
       try {
         const response = await axios.get(
-          `/region/${regionActual}/estados`,
+          `/api/region/${regionActual}/estados`,
         );
         setEstadoList(response.data);
       } catch (error) {
@@ -46,7 +46,7 @@ export function useUbicaciones({ regionActual, estadoActual }) {
       }
       try {
         const response = await axios.get(
-          `/estados/${estadoActual}/ciudades`,
+          `/api/estados/${estadoActual}/ciudades`,
         );
         setCiudadesList(response.data);
       } catch (error) {
