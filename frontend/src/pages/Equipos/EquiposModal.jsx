@@ -12,7 +12,7 @@ import {
 import { toast } from "react-hot-toast";
 
 // IMPORTACIONES PARA EL FORMULARIO REUTILIZABLE
-import EquipoForm from "../Equipos/EquipoForm";
+import EquipoForm from "./EquipoForm";
 import { mapEquipoToForm } from "../../utils/mapEquipoToForm";
 import { z } from "zod";
 import { buildPayload } from "../../utils/buildPayload";

@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import { db } from "../config/firebase.js";
 import { FieldValue } from "firebase-admin/firestore";
 import jwt from "jsonwebtoken";
-import { generarCambios } from "../controller/generarCambios.js";
+import { generarCambios } from "../src/controller/generarCambios.js";
 import verificarToken from "../middleware/verificarToken.js";
 import esSuperAdmin from "../middleware/esSuperAdmin.js";
 import permitirEscritura from "../middleware/permitirEscritura.js";

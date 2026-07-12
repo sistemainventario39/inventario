@@ -17,7 +17,7 @@ import NuevaPassword from "./pages/NuevaPassword";
 import Bitacora from "./pages/Bitacora";
 import Ubicacion from "./pages/Ubicacion/Ubicacion";
 import { Toaster } from "react-hot-toast";
-import { AuthProvider, useAuth } from "../src/controllers/AuthContext";
+import { AuthProvider, useAuth } from "./controllers/AuthContext";
 
 const RutaProtegida = () => {
   const { user, cargando } = useAuth();

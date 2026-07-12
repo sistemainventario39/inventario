@@ -1,13 +1,22 @@
 {
-  "version": 2,
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "/api/index.js"
+    "services": {
+      "frontend": {
+        "root": "frontend/",
+        "framework": "vite"
+      },
+      "backend": {
+        "root": "backend/",
+        "entrypoint": "index.js"
+      }
     },
-    {
-      "source": "/((?!api).*)",
-      "destination": "/index.html"
-    }
-  ]
-}
+    "rewrites": [
+      {
+        "source": "/api/(.*)",
+        "destination": { "service": "backend" }
+      },
+      {
+        "source": "/((?!api|_next|.*\\..*).*)",
+        "destination": { "service": "frontend" }
+      }
+    ]
+  }
