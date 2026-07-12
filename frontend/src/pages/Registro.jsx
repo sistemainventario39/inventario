@@ -33,7 +33,7 @@ export default function Registro() {
 
     try {
       equipoSchema.parse(formData);
-    } } catch (error) {
+    } catch (error) {
       console.error("Error registrando equipo:", error);
   
       let mensajeError = "Error interno";
