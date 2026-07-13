@@ -49,13 +49,13 @@ export default function RecuperarPassword() {
           <div className="w-full max-w-md">
             <div className="text-center mb-10 flex flex-col items-center">
               <img
-                src="/logo_cantv.png"
+                src="/assets/logo_cantv.png"
                 alt="CANTV Logo"
                 className="h-16 w-auto mx-auto mb-6 block drop-shadow-lg"
               />
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 Bienvenido de nuevo
-              </h1>
+              </h1> 
               <p className="text-gray-500">
                 Ingresa tu correo electrónico para recuperar tu contraseña.
               </p>
