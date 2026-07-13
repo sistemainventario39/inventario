@@ -8,27 +8,28 @@ import logoCantv from "../assets/logo_cantv.png";
 
 export default function Login() {
   const { loginGlobal } = useAuth();
-  const [loading, setLoading] = useState(false); // Estado para feedback visual
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ correo: "", password: "" });
+  // Cambiamos 'correo' por 'identificador'
+  const [formData, setFormData] = useState({ identificador: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    // Creamos una notificación de carga (opcional pero muy pro)
     const toastId = toast.loading("Verificando credenciales...");
 
     try {
       const response = await Axios.post(
         "/api/login",
         {
-          correo: formData.correo,
+          identificador: formData.identificador,
           password: formData.password,
         },
         {
-          withCredentials: true, // <--- ¡AQUÍ ES DONDE DEBE IR!
-        },
+          withCredentials: true,
+        }
       );
 
       if (response.status === 200) {
@@ -39,11 +40,12 @@ export default function Login() {
     } catch (error) {
       const mensajeError =
         error.response?.data?.message || "Error de conexión con el servidor";
-      toast.error(mensajeError, { id: toastId }); // Reemplaza el loading por error
+      toast.error(mensajeError, { id: toastId });
     } finally {
       setLoading(false);
     }
   };
+
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-white">
       <div className="flex w-full min-h-screen items-center justify-center p-4 bg-[linear-gradient(45deg,#56ccf2,#51c3f1,#4cb9f1,#47b0f0,#43a6f0,#3e9def,#3993ee,#348aee,#2f80ed)]">
@@ -67,24 +69,24 @@ export default function Login() {
               <div>
                 <label
                   className="block text-sm font-medium text-gray-700 mb-2"
-                  htmlFor="username"
+                  htmlFor="identificador"
                 >
-                  Usuario
+                  Correo o Usuario
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <FiMail className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
-                    id="correo"
-                    type="correo"
+                    id="identificador"
+                    type="text"
                     required
-                    value={formData.correo}
+                    value={formData.identificador}
                     onChange={(e) =>
-                      setFormData({ ...formData, correo: e.target.value })
+                      setFormData({ ...formData, identificador: e.target.value })
                     }
                     className="pl-10 block w-full border-gray-300 rounded-lg shadow-sm py-3 px-4 outline-none focus:ring-primary-500 focus:border-primary-500 border transition-all"
-                    placeholder="golazo7"
+                    placeholder="correo@cantv.com o usuario"
                   />
                 </div>
               </div>
@@ -124,22 +126,23 @@ export default function Login() {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
-                      >
-                        {showPassword ? (
-                          <FiEyeOff className="h-5 w-5" />
-                        ) : (
-                          <FiEye className="h-5 w-5" />
-                        )}
-                      </button>
+                    >
+                      {showPassword ? (
+                        <FiEyeOff className="h-5 w-5" />
+                      ) : (
+                        <FiEye className="h-5 w-5" />
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>
 
               <button
                 type="submit"
+                disabled={loading}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all active:scale-[0.98]"
               >
-                Iniciar sesión
+                {loading ? "Verificando..." : "Iniciar sesión"}
               </button>
             </form>
           </div>

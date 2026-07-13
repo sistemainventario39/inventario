@@ -321,13 +321,23 @@ Router.put("/usuarios/eliminado/:id", verificarToken, async (req, res) => {
 });
 
 Router.post("/login", async (req, res) => {
-  const { correo, password } = req.body;
+  const { identificador, password, correo } = req.body;
+  const valorBusqueda = identificador || correo;
+
   try {
-    const snapshot = await db
+    let snapshot = await db
       .collection("usuarios")
-      .where("correo", "==", correo)
+      .where("correo", "==", valorBusqueda)
       .limit(1)
       .get();
+
+    if (snapshot.empty) {
+      snapshot = await db
+        .collection("usuarios")
+        .where("username", "==", valorBusqueda)
+        .limit(1)
+        .get();
+    }
 
     if (snapshot.empty) {
       return res.status(401).json({ message: "Credenciales inválidas" });
@@ -339,6 +349,7 @@ Router.post("/login", async (req, res) => {
     if (usuario.estado !== "activo") {
       return res.status(403).json({ message: "Usuario se encuentra inactivo" });
     }
+
     const match =
       password === usuario.password ||
       (await bcrypt.compare(password, usuario.password));
@@ -347,8 +358,7 @@ Router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Credenciales inválidas" });
     }
 
-    const usuarioData = doc.data();
-    const rol = usuarioData.rol || "Usuario";
+    const rol = usuario.rol || "Usuario";
     const sede = usuario.ubicacion?.sede || null;
 
     const token = jwt.sign(
@@ -356,11 +366,11 @@ Router.post("/login", async (req, res) => {
         id: doc.id,
         rol: rol,
         sede: sede,
-        username: usuarioData.username,
-        correo: usuarioData.correo,
+        username: usuario.username,
+        correo: usuario.correo,
       },
       process.env.JWT_SECRET || "lol",
-      { expiresIn: "1h" },
+      { expiresIn: "1h" }
     );
 
     res.cookie("acceso_token", token, {
@@ -369,10 +379,8 @@ Router.post("/login", async (req, res) => {
       sameSite: "lax",
       maxAge: 3600000,
     });
-    const listaCambios = [];
 
-    listaCambios.push("Inicio de Sesión");
-
+    const listaCambios = ["Inicio de Sesión"];
     const bitacoraRef = db.collection("bitacora").doc();
     await bitacoraRef.set({
       usuario: usuario.username,
