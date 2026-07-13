@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { availableIcons } from "../../utils/avatars";
+import logoCantv from "../../assets/logo_cantv.png";
 
 const listItems = [
   { icon: UserIcon, property: "Profile", path: "/perfil" },
@@ -82,7 +83,7 @@ export default function Header() {
             {/* Logo */}
             <Link to="/dashboard" className="flex items-center space-x-2">
               <img
-                src="/logo_cantv.png"
+                src={logoCantv}
                 alt="CANTV Logo"
                 className="h-10 w-auto"
               />

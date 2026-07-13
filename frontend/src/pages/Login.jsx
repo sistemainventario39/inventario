@@ -4,6 +4,7 @@ import { FiMail, FiLock, FiCpu, FiEye, FiEyeOff } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import Axios from "axios";
 import { useAuth } from "../controllers/AuthContext";
+import logoCantv from "../assets/logo_cantv.png";
 
 export default function Login() {
   const { loginGlobal } = useAuth();
@@ -50,7 +51,7 @@ export default function Login() {
           <div className="w-full max-w-md">
             <div className="text-center mb-10 flex flex-col items-center">
               <img
-                src="/logo_cantv.png"
+                src={logoCantv}
                 alt="CANTV Logo"
                 className="h-16 w-auto mx-auto mb-6 block drop-shadow-lg"
               />

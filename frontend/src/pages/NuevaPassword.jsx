@@ -5,6 +5,7 @@ import { CloseButton } from "../components/ui/button-close";
 import axios from "axios";
 import {toast} from "react-hot-toast";
 import {FiEye, FiEyeOff} from "react-icons/fi";
+import logoCantv from "../assets/logo_cantv.png";
 
 
 export default function NuevaPassword() {
@@ -101,7 +102,7 @@ export default function NuevaPassword() {
           <div className="w-full max-w-md">
             <div className="text-center mb-10 flex flex-col items-center">
               <img
-                src="/logo_cantv.png"
+                src={logoCantv}
                 alt="CANTV Logo"
                 className="h-16 w-auto mx-auto mb-6 block drop-shadow-lg"
               />

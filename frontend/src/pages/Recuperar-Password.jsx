@@ -4,7 +4,7 @@ import { FiMail } from "react-icons/fi";
 import { CloseButton } from "../components/ui/button-close";
 import axios from "axios";
 import {toast} from "react-hot-toast";
-
+import logoCantv from "../assets/logo_cantv.png";
 
 export default function RecuperarPassword() {
   const navigate = useNavigate();
@@ -49,7 +49,7 @@ export default function RecuperarPassword() {
           <div className="w-full max-w-md">
             <div className="text-center mb-10 flex flex-col items-center">
               <img
-                src="/assets/logo_cantv.png"
+                src={logoCantv}
                 alt="CANTV Logo"
                 className="h-16 w-auto mx-auto mb-6 block drop-shadow-lg"
               />
