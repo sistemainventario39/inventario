@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { FiDownload, FiFileText, FiGrid } from "react-icons/fi";
-import { normalize } from "../../../../backend/utils/inventory.helpers.js";
 
 
 function dedupeTipos(tipos) {
@@ -14,6 +13,12 @@ function dedupeTipos(tipos) {
     return true;
   });
 }
+const normalize = (value = "") =>
+  String(value)
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 
 export default function ExportDownloadButton({ filters = {} }) {
   const [tipos, setTipos] = useState([]);
